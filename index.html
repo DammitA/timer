@@ -327,6 +327,26 @@ var activeSources = []; var timers = [];
       activeSources.push(o);
     }
 
+    // Micro pre-roll click to 'wake' the output just before the draw beep
+    function primeAudio(at){
+      if(!audioCtx) return;
+      try{
+        var o = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(1000, at);
+        // very small audible blip
+        g.gain.setValueAtTime(0.0, at);
+        g.gain.linearRampToValueAtTime(0.02, at + 0.006);
+        g.gain.linearRampToValueAtTime(0.0, at + 0.012);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(at);
+        o.stop(at + 0.02);
+        activeSources.push(o);
+      }catch(e){}
+    }
+
+
     function haptic(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
     function cancelAllAudio(){
       var now = audioCtx ? audioCtx.currentTime : 0;
@@ -390,7 +410,16 @@ var activeSources = []; var timers = [];
       var out = buildTimeline(cfg);
       var events = out.events; var total = out.total;
       current = {cfg:cfg, events:events, total:total, i:0}; schedule.length=0; paused=false; 
-      var SAFETY_OFFSET = 0.08; runStart = audioCtx.currentTime + SAFETY_OFFSET;
+      var SAFETY_OFFSET = 0.12; runStart = audioCtx.currentTime + SAFETY_OFFSET;
+      // Schedule a micro pre-roll click ~30ms before the draw beep (clamped to a bit in the future)
+      var drawEv = events.find(function(e){ return e.type==='draw'; });
+      if(drawEv){
+        var preAt = runStart + drawEv.t - 0.03;
+        var minAt = audioCtx.currentTime + 0.005;
+        if(preAt < minAt) preAt = minAt;
+        primeAudio(preAt);
+      }
+    
       els.start.disabled = true;
 
       renderSummary(events);
