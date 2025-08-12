@@ -33,14 +33,38 @@
     .primary{background:var(--acc);color:#031325;min-width:140px}
     .ghost{background:#1b2330;color:var(--text)}
     .danger{background:var(--danger);color:#1a0b0b}
-    .progress{height:10px;background:#1b2330;border-radius:999px;overflow:hidden}
+    /*.progress{height:10px;background:#1b2330;border-radius:999px;overflow:hidden} */
+	.progress{
+	  height:10px;
+	  background: rgba(179,122,62,0.35);  /* warm track */
+	  border-radius:6px;
+	  overflow:hidden;
+	}
     .bar{height:100%;width:0;background:var(--acc2)}
     .ring{width:var(--ring-size);height:var(--ring-size);display:grid;place-items:center;margin:auto}
     .ring svg{transform:rotate(-90deg)}
     .live{min-height:2.2em}
     .muted{color:var(--muted)}
-    .kvs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-variant-numeric:tabular-nums}
-    .kvs div{background:#0f141c;padding:8px;border-radius:10px}
+    /*.kvs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-variant-numeric:tabular-nums} */
+	.kvs{
+	  display:grid;
+	  gap:6px;
+	  background: rgba(30, 24, 18, 0.65);       /* warm translucent panel */
+	  padding: 10px;
+	  border-radius: 12px;
+	  border: 1px solid rgba(199,158,99,0.25);  /* subtle brass edge */
+	  grid-template-columns:repeat(2,1fr)
+	}
+
+    /*.kvs div{background:#0f141c;padding:8px;border-radius:10px} */
+	/* Warmer pill backgrounds for Status / Next cue / Elapsed / Total plan */
+	.kvs div{
+	  background: rgba(179,122,62,0.1);          /* saddle-leather tint */
+	  padding: 8px;
+	  border-radius: 10px;
+	  border: 1px solid rgba(199,158,99,0.1);    /* subtle brass edge */
+	}
+
     .kvs b{display:block;color:#c9d6e6;font-size:12px}
     @media (max-width:720px){ 
 		.grid.cols{grid-template-columns:1fr} 
@@ -203,7 +227,8 @@
 	  <div class="grid">
 		<div class="ring">
 		  <svg id="ring" width="180" height="180" viewBox="0 0 120 120">
-			<circle cx="60" cy="60" r="54" fill="none" stroke="#1f2937" stroke-width="12"/>
+			<!-- <circle cx="60" cy="60" r="54" fill="none" stroke="#1f2937" stroke-width="12"/> --!>
+			<circle cx="60" cy="60" r="54" fill="none" stroke="rgba(179,122,62,0.35)" stroke-width="12"/>
 			<circle id="ringArc" cx="60" cy="60" r="54" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292"/>
 		  </svg>
 		</div>
