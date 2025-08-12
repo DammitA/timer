@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Training Timer — v2 (fixed)</title>
+  <style>
+    :root{
+      --bg:#0b0d10; --panel:#141820; --text:#e9eef5; --muted:#a7b0bf; --acc:#3ea0ff; --acc2:#34d399; --danger:#ef4444;
+      --ring-size:180px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:900px;margin:0 auto;padding:16px;display:grid;gap:16px}
+    header{display:flex;align-items:center;justify-content:space-between}
+    h1{font-size:20px;margin:0}
+    .grid{display:grid;gap:12px}
+    .grid.cols{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .panel{background:var(--panel);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    .row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+    input[type=number], input[type=text]{width:110px}
+    input[type=number], input[type=text], select{
+      background:#0e1218;color:var(--text);border:1px solid #1f2632;border-radius:10px;padding:10px 12px;
+    }
+    input[type=range]{width:100%}
+    .inline{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btns{position:sticky;bottom:0;display:flex;gap:12px;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(11,13,16,0),rgba(11,13,16,.9));padding:8px 0}
+    button{border:0;border-radius:14px;padding:14px 18px;font-weight:600;cursor:pointer}
+    .primary{background:var(--acc);color:#031325;min-width:140px}
+    .ghost{background:#1b2330;color:var(--text)}
+    .danger{background:var(--danger);color:#1a0b0b}
+    .progress{height:10px;background:#1b2330;border-radius:999px;overflow:hidden}
+    .bar{height:100%;width:0;background:var(--acc2)}
+    .ring{width:var(--ring-size);height:var(--ring-size);display:grid;place-items:center;margin:auto}
+    .ring svg{transform:rotate(-90deg)}
+    .live{min-height:2.2em}
+    .muted{color:var(--muted)}
+    .kvs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-variant-numeric:tabular-nums}
+    .kvs div{background:#0f141c;padding:8px;border-radius:10px}
+    .kvs b{display:block;color:#c9d6e6;font-size:12px}
+    @media (max-width:720px){ .grid.cols{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Training Timer</h1>
+      <div class="inline">
+        <button id="savePreset" class="ghost" title="Save current settings as preset">Save Preset</button>
+        <select id="presetSelect" title="Load a preset"></select>
+      </div>
+    </header>
+
+    <section class="panel grid cols">
+      <div class="grid">
+        <div>
+          <label>Shots per string</label>
+          <div class="row">
+            <input id="shots" type="range" min="1" max="30" step="1" />
+            <input id="shotsN" type="number" min="1" max="30" />
+          </div>
+        </div>
+        <div>
+          <label>Split time (s)</label>
+          <div class="row">
+            <input id="split" type="range" min="0.10" max="2.00" step="0.01" />
+            <input id="splitN" type="number" min="0.10" max="10" step="0.01" />
+          </div>
+        </div>
+        <div>
+          <label>First shot time (s) <span class="muted">(draw → first shot)</span></label>
+          <div class="row">
+            <input id="first" type="range" min="0.10" max="5.00" step="0.05" />
+            <input id="firstN" type="number" min="0.10" max="10" step="0.01" />
+          </div>
+          <div class="inline muted" style="margin-top:6px">
+            <input id="randomStart" type="checkbox" />
+            <span>Randomize draw delay:</span>
+            <label class="inline" style="gap:6px">min <input id="randMin" type="number" min="0.00" max="10" step="0.01" style="width:86px"/></label>
+            <label class="inline" style="gap:6px">max <input id="randMax" type="number" min="0.00" max="10" step="0.01" style="width:86px"/></label>
+          </div>
+        </div>
+        <div>
+          <label>Reload breaks</label>
+          <div class="row">
+            <input id="reloads" type="range" min="0" max="10" step="1" />
+            <input id="reloadsN" type="number" min="0" max="10" />
+          </div>
+        </div>
+        <div>
+          <label>Reload time (s)</label>
+          <div class="row">
+            <input id="reloadTime" type="range" min="0.10" max="5.00" step="0.05" />
+            <input id="reloadTimeN" type="number" min="0.10" max="10" step="0.01" />
+          </div>
+        </div>
+        <div>
+          <label>Cues</label>
+          <div class="inline">
+            <!-- Voice removed -->
+            <label class="inline"><input id="hapticsOn" type="checkbox"/> Haptics</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="ring">
+          <svg id="ring" width="180" height="180" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="#1f2937" stroke-width="12"/>
+            <circle id="ringArc" cx="60" cy="60" r="54" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292"/>
+          </svg>
+        </div>
+        <div class="kvs">
+          <div><b>Status</b><div id="status" class="live">Idle</div></div>
+          <div><b>Next cue</b><div id="nextCue" class="live muted">—</div></div>
+          <div><b>Elapsed</b><div id="elapsed" class="live">0.00 s</div></div>
+          <div><b>Total plan</b><div id="planLen" class="live">0.00 s</div></div>
+        </div>
+        <div class="progress"><div id="bar" class="bar"></div></div>
+        <div class="inline">
+          <button id="testBeep" class="ghost">Test beep</button>
+          <button id="clear" class="ghost">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel btns">
+      <div class="inline">
+        <button id="start" class="primary">Start</button>
+        <button id="pause" class="ghost">Pause</button>
+        <button id="stop" class="danger">Stop</button>
+      </div>
+      <small class="muted">Space: Start/Pause • S: Stop</small>
+    </section>
+
+    <section class="panel">
+      <details>
+        <summary>Beep tone settings</summary>
+        <div class="grid cols" style="margin-top:10px">
+          <div>
+            <label>Normal beep frequency (Hz)</label>
+            <input id="freq" type="number" min="200" max="3000" step="1" value="1000"/>
+          </div>
+          <div>
+            <label>Normal beep length (s)</label>
+            <input id="len" type="number" min="0.05" max="1.0" step="0.01" value="0.15"/>
+          </div>
+          <div>
+            <label>Draw beep frequency (Hz)</label>
+            <input id="freq0" type="number" min="200" max="3000" step="1" value="800"/>
+          </div>
+          <div>
+            <label>Draw beep length (s)</label>
+            <input id="len0" type="number" min="0.05" max="1.5" step="0.01" value="0.25"/>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel">
+      <details>
+        <summary>Session summary</summary>
+        <pre id="summary" style="white-space:pre-wrap"></pre>
+        <div class="inline">
+          <button id="copySummary" class="ghost">Copy</button>
+          <button id="exportCsv" class="ghost">Export CSV</button>
+        </div>
+      </details>
+    </section>
+
+    <details class="panel">
+      <summary>Self‑tests (dev)</summary>
+      <pre id="tests" style="white-space:pre-wrap"></pre>
+    </details>
+
+    <footer class="muted">No backend. Fully offline. Built with Web Audio scheduling & Wake Lock (where supported).</footer>
+  </div>
+
+  <script>
+  (function(){
+    'use strict';
+    var $ = function(id){ return document.getElementById(id); };
+    var els = {
+      shots: $('shots'), shotsN: $('shotsN'),
+      split: $('split'), splitN: $('splitN'),
+      first: $('first'), firstN: $('firstN'),
+      randomStart: $('randomStart'), randMin: $('randMin'), randMax: $('randMax'),
+      reloads: $('reloads'), reloadsN: $('reloadsN'),
+      reloadTime: $('reloadTime'), reloadTimeN: $('reloadTimeN'),
+      hapticsOn: $('hapticsOn'),
+      start: $('start'), pause: $('pause'), stop: $('stop'), testBeep: $('testBeep'), clear: $('clear'),
+      status: $('status'), nextCue: $('nextCue'), elapsed: $('elapsed'), planLen: $('planLen'),
+      ringArc: $('ringArc'), bar: $('bar'),
+      freq: $('freq'), len: $('len'), freq0: $('freq0'), len0: $('len0'),
+      summary: $('summary'), copySummary: $('copySummary'), exportCsv: $('exportCsv'),
+      presetSelect: $('presetSelect'), savePreset: $('savePreset'),
+      tests: $('tests')
+    };
+
+    // Pair range+number controls
+    function bindPair(range, number, key, onChange){
+      var r = els[range], n = els[number];
+      function apply(v){ v = +v; r.value = v; n.value = v; if(onChange) onChange(v); }
+      r.addEventListener('input', function(e){ apply(e.target.value); });
+      n.addEventListener('input', function(e){ apply(e.target.value); });
+      var saved = load()[key];
+      if(saved!=null) apply(saved); else apply(r.value);
+    }
+
+    // Load/save localStorage
+    var LSKEY = 'ttimer_v2';
+    function load(){ try{ return JSON.parse(localStorage.getItem(LSKEY))||{} }catch(e){ return {} } }
+    function save(patch){ var cur = load(); localStorage.setItem(LSKEY, JSON.stringify(Object.assign({}, cur, patch))); }
+
+    // Defaults & bindings
+    bindPair('shots','shotsN','shots', function(v){ save({shots:v}); });
+    bindPair('split','splitN','split', function(v){ save({split:v}); });
+    bindPair('first','firstN','first', function(v){ save({first:v}); });
+    bindPair('reloads','reloadsN','reloads', function(v){ save({reloads:v}); });
+    bindPair('reloadTime','reloadTimeN','reloadTime', function(v){ save({reloadTime:v}); });
+
+    // Other controls
+    var st = load();
+    els.randomStart.checked = !!st.randomStart;
+    els.randMin.value = (st.randMin != null ? st.randMin : 0.00);
+    els.randMax.value = (st.randMax != null ? st.randMax : 2.50);
+    els.freq.value = (st.freq != null ? st.freq : 1000);
+    els.len.value = (st.len != null ? st.len : 0.15);
+    els.freq0.value = (st.freq0 != null ? st.freq0 : 800);
+    els.len0.value = (st.len0 != null ? st.len0 : 0.25);
+
+    [els.randomStart, els.randMin, els.randMax, els.freq, els.len, els.freq0, els.len0].forEach(function(el){
+      el.addEventListener('input', function(){
+        save({
+          randomStart: els.randomStart.checked,
+          randMin: +els.randMin.value, randMax: +els.randMax.value,
+          freq:+els.freq.value, len:+els.len.value, freq0:+els.freq0.value, len0:+els.len0.value
+        });
+      });
+    });
+
+    // Presets (local only)
+    var PSKEY = 'ttimer_v2_presets';
+    function loadPresets(){ try{ return JSON.parse(localStorage.getItem(PSKEY))||{} }catch(e){ return {} } }
+    function savePresets(obj){ localStorage.setItem(PSKEY, JSON.stringify(obj)); }
+
+    function fillPresetSelect(){
+      var ps = loadPresets();
+      var opts = '<option value="">Load preset…</option>';
+      Object.keys(ps).forEach(function(k){
+        opts += '<option value="'+k+'">'+k+'</option>';
+      });
+      els.presetSelect.innerHTML = opts;
+    }
+    fillPresetSelect();
+
+    els.savePreset.addEventListener('click', function(){
+      var name = prompt('Preset name?'); if(!name) return;
+      var preset = currentSettings();
+      var ps = loadPresets(); ps[name]=preset; savePresets(ps); fillPresetSelect();
+    });
+    els.presetSelect.addEventListener('change', function(e){
+      var name = e.target.value; if(!name) return;
+      var p = loadPresets()[name]; if(!p) return;
+      applySettings(p);
+    });
+
+    function applySettings(p){
+      function set(id,val){
+        var control = els[id];
+        if(control && (control.type==='range' || control.type==='number')){
+          control.value = val;
+          var twinId = id.slice(-1)==='N' ? id.slice(0,-1) : id + 'N';
+          var twin = els[twinId];
+          if(twin) twin.value = val;
+        }
+      }
+      set('shots', +p.shots); set('split', +p.split); set('first', +p.first);
+      set('reloads', +p.reloads); set('reloadTime', +p.reloadTime);
+      els.randomStart.checked = !!p.randomStart; els.randMin.value = (p.randMin != null ? p.randMin : 0.0); els.randMax.value = (p.randMax != null ? p.randMax : 2.5);
+      els.freq.value = (p.freq != null ? p.freq : 1000); els.len.value = (p.len != null ? p.len : 0.15);
+      els.freq0.value = (p.freq0 != null ? p.freq0 : 800); els.len0.value = (p.len0 != null ? p.len0 : 0.25);
+      save(p);
+      updatePlanStats();
+    }
+
+    function currentSettings(){
+      return {
+        shots:+els.shots.value, split:+els.split.value, first:+els.first.value,
+        reloads:+els.reloads.value, reloadTime:+els.reloadTime.value,
+        randomStart:els.randomStart.checked, randMin:+els.randMin.value, randMax:+els.randMax.value,
+        hapticsOn:els.hapticsOn.checked,
+        freq:+els.freq.value, len:+els.len.value, freq0:+els.freq0.value, len0:+els.len0.value
+      };
+    }
+
+    // ===== Audio engine =====
+    var audioCtx = null; var wakeLock = null; var startedOnce=false; var runStart=0; var paused=false; var pauseAt=0;
+var activeSources = []; var timers = [];
+    async function ensureAudio(){
+      if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+      if(audioCtx.state !== 'running'){
+        try{ await audioCtx.resume(); }catch(e){}
+      }
+      try{
+        var b = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+        var src = audioCtx.createBufferSource(); src.buffer = b; src.connect(audioCtx.destination); src.start(0);
+        activeSources.push(src);
+      }catch(e){}
+      startedOnce = true; return audioCtx;
+    }
+    function requestWakeLock(){
+      try{ if('wakeLock' in navigator){ navigator.wakeLock.request('screen').then(function(lock){ wakeLock = lock; wakeLock.addEventListener('release',function(){wakeLock=null;}); }); } }catch(e){}
+    }
+
+    function beep(at, freq, len){
+      if(!audioCtx) return;
+      var o = audioCtx.createOscillator(); var g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(freq, at);
+      g.gain.setValueAtTime(0, at);
+      g.gain.linearRampToValueAtTime(0.8, at+0.005);
+      g.gain.linearRampToValueAtTime(0.0, at+len);
+      o.connect(g).connect(audioCtx.destination);
+      try{ o.start(at); o.stop(at+len+0.05); }catch(e){}
+      activeSources.push(o);
+    }
+
+    function haptic(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+    function cancelAllAudio(){
+      var now = audioCtx ? audioCtx.currentTime : 0;
+      try{
+        activeSources.forEach(function(src){
+          try{ if(src.stop) src.stop(now); }catch(e){}
+          try{ if(src.disconnect) src.disconnect(); }catch(e){}
+        });
+      }catch(e){}
+      activeSources = [];
+      try{ timers.forEach(function(id){ clearTimeout(id); }); }catch(e){};
+      timers = [];
+    }
+
+    // ===== Timeline planner =====
+    function buildTimeline(cfg){
+      var events = [];
+      var shotsPerString = Math.max(0, Math.floor(cfg.shots));
+      var strings = Math.max(1, Math.floor(cfg.reloads) + 1);
+
+      var drawDelay = cfg.randomStart ? randUniform(cfg.randMin, cfg.randMax) : 0;
+      var t = 0;
+      events.push({ t: t, type:'ready' });
+      t += drawDelay;
+      events.push({ t: t, type:'draw' });
+
+      t += cfg.first;
+
+      var shotIndex = 1;
+      for(var seg=0; seg<strings; seg++){
+        for(var i=0; i<shotsPerString; i++){
+          events.push({ t: t, type:'shot', n: shotIndex });
+          shotIndex++;
+          var isLastShotInString = (i === shotsPerString-1);
+          var isLastString = (seg === strings-1);
+          if(!(isLastString && isLastShotInString)){
+            if(isLastShotInString){
+              // reload gap only
+              t += cfg.reloadTime;
+              events.push({ t: t, type:'reload' });
+            } else {
+              t += cfg.split;
+            }
+          }
+        }
+      }
+
+      events.push({ t: t, type:'end' });
+      return { events: events, total: t };
+    }
+
+    function randUniform(a,b){ if(b<a){ var tmp=a; a=b; b=tmp; } return a + Math.random()*(b-a); }
+
+    // ===== Runner =====
+    var current = null; var schedule = [];
+
+    async function start(){
+      await ensureAudio(); requestWakeLock();
+      if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
+      var cfg = currentSettings();
+      var out = buildTimeline(cfg);
+      var events = out.events; var total = out.total;
+      current = {cfg:cfg, events:events, total:total, i:0}; schedule.length=0; paused=false; 
+      var SAFETY_OFFSET = 0.08; runStart = audioCtx.currentTime + SAFETY_OFFSET;
+      els.start.disabled = true;
+
+      renderSummary(events);
+      els.planLen.textContent = total.toFixed(2)+' s';
+      status('Armed');
+
+      events.forEach(function(ev){
+        var at = runStart + ev.t;
+        if(ev.type==='draw') beep(at, cfg.freq0, cfg.len0);
+        else if(ev.type==='shot' || ev.type==='reload') beep(at, cfg.freq, cfg.len);
+        schedule.push({at:at, ev:ev});
+      });
+
+      tick();
+      if(cfg.hapticsOn){
+        var first = events.find(function(e){ return e.type==='draw'; });
+        if(first){ timers.push(setTimeout(function(){ haptic(50); }, first.t*1000)); }
+        events.filter(function(e){return e.type==='reload';}).forEach(function(r){
+          timers.push(setTimeout(function(){ haptic(30); }, r.t*1000));
+        });
+      }
+    }
+
+    function pause(){ if(!current||paused) return; paused=true; pauseAt = audioCtx.currentTime; status('Paused'); }
+    function resume(){ if(!current||!paused) return; var shift = audioCtx.currentTime - pauseAt; schedule.forEach(function(s){ if(s.at>pauseAt) s.at += shift; }); runStart += shift; paused=false; status('Running'); tick(); }
+    function stop(){ cancelAllAudio(); current=null; schedule.length=0; status('Idle'); updatePlanStats(true); if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel(); setRing(0); setBar(0); els.nextCue.textContent='—'; els.elapsed.textContent='0.00 s'; els.start.disabled = false; }
+
+    function status(txt){ els.status.textContent = txt; }
+
+    function tick(){
+      if(!current) return;
+      var now = audioCtx.currentTime;
+      while(schedule.length && schedule[0].at <= now + 0.01){
+        var ev = schedule.shift().ev;
+        if(ev.type==='draw') status('Running');
+        if(ev.type==='shot') els.nextCue.textContent = 'Shot ' + (ev.n+1 || '');
+        if(ev.type==='reload') els.nextCue.textContent = 'Reload';
+        if(ev.type==='end'){ status('Done'); setRing(0); setBar(1); els.start.disabled = false; return; }
+      }
+      var elapsed = now - runStart; els.elapsed.textContent = elapsed.toFixed(2)+ ' s';
+      setBar(Math.min(1, elapsed / current.total));
+      var firstDraw = null;
+      for(var k=0;k<current.events.length;k++){ if(current.events[k].type==='draw'){ firstDraw=current.events[k]; break; } }
+      var firstAt = runStart + (firstDraw ? firstDraw.t : 0);
+      var remaining = Math.max(0, firstAt - now);
+      var startDelay = (firstDraw ? firstDraw.t : 1);
+      setRing( startDelay<=0 ? 0 : 1 - (remaining/startDelay) );
+      if(current) requestAnimationFrame(tick);
+    }
+
+    function setBar(frac){ els.bar.style.width = (frac*100).toFixed(1)+'%'; }
+    function setRing(frac){ var C = 2*Math.PI*54; var off = Math.max(0, C*(1-frac)); els.ringArc.style.strokeDashoffset = off.toFixed(2); }
+
+    function renderSummary(events){
+      var lines = ['#,label,time_s'];
+      var i=0; events.forEach(function(ev){ lines.push((i++)+','+ev.type+','+ev.t.toFixed(3)); });
+      els.summary.textContent = lines.join('\n');
+    }
+
+    // Buttons
+    els.start.addEventListener('click', function(){ if(paused) resume(); else start(); });
+    els.pause.addEventListener('click', function(){ if(!current) return; if(paused) resume(); else pause(); });
+    els.stop.addEventListener('click', stop);
+    els.testBeep.addEventListener('click', function(){ ensureAudio(); var now=audioCtx.currentTime; beep(now+0.05, +els.freq.value, +els.len.value); });
+    els.clear.addEventListener('click', function(){ applySettings({shots:6, split:0.25, first:0.75, reloads:0, reloadTime:1.2, randomStart:false, randMin:0.0, randMax:2.5, hapticsOn:false, freq:1000, len:0.15, freq0:800, len0:0.25}); stop(); });
+
+    // Keyboard
+    window.addEventListener('keydown', function(e){
+      if(e.code==='Space'){ e.preventDefault(); if(!startedOnce) ensureAudio(); if(paused) resume(); else if(current) pause(); else start(); }
+      if(e.key==='s' || e.key==='S'){ stop(); }
+    });
+
+    // Copy/export
+    els.copySummary.addEventListener('click', function(){ try{ navigator.clipboard.writeText(els.summary.textContent); els.copySummary.textContent='Copied!'; setTimeout(function(){ els.copySummary.textContent='Copy'; },1200);}catch(e){} });
+    els.exportCsv.addEventListener('click', function(){
+      var blob = new Blob([els.summary.textContent], {type:'text/csv'});
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'training_timer_session.csv';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+    });
+
+    function updatePlanStats(reset){
+      var out = buildTimeline(currentSettings());
+      els.planLen.textContent = out.total.toFixed(2)+' s';
+      if(reset){ els.summary.textContent=''; }
+    }
+    updatePlanStats();
+
+    // iOS autoplay fix — create AudioContext on first tap anywhere
+    window.addEventListener('pointerdown', function(){ if(!audioCtx) ensureAudio(); }, {once:true});
+
+    // ===== Self tests =====
+    function runTests(){
+      var results = [];
+      var fails = 0;
+      function assert(name, cond){ results.push((cond? 'PASS':'FAIL')+' — '+name); if(!cond) fails++; }
+      function shotTimes(tl){ return tl.events.filter(function(e){return e.type==='shot';}).map(function(e){return e.t;}); }
+
+      // No reload
+      var tl = buildTimeline({shots:3, split:1.0, first:0.5, reloads:0, reloadTime:1.5, randomStart:false, randMin:0.0, randMax:0.0});
+      var shots = shotTimes(tl);
+      assert('draw at 0.00', Math.abs(tl.events.find(function(e){return e.type==='draw';}).t - 0) < 1e-9);
+      assert('first shot at 0.50', Math.abs(shots[0] - 0.5) < 1e-9);
+      assert('second shot at 1.50', Math.abs(shots[1] - 1.5) < 1e-9);
+      assert('third shot at 2.50', Math.abs(shots[2] - 2.5) < 1e-9);
+
+      // One reload: 2 strings of 3 shots
+      tl = buildTimeline({shots:3, split:1.0, first:0.5, reloads:1, reloadTime:1.5, randomStart:false, randMin:0.0, randMax:0.0});
+      shots = shotTimes(tl);
+      assert('6 shots total', shots.length === 6);
+      var gap = shots[3] - shots[2];
+      assert('Gap across reload equals reloadTime (1.5s)', Math.abs(gap - 1.5) < 1e-9);
+
+      // ReloadTime 1.3 check
+      tl = buildTimeline({shots:3, split:1.0, first:0.5, reloads:1, reloadTime:1.3, randomStart:false, randMin:0.0, randMax:0.0});
+      shots = shotTimes(tl);
+      gap = shots[3] - shots[2];
+      assert('Gap across reload equals reloadTime (1.3s)', Math.abs(gap - 1.3) < 1e-9);
+
+      if(els.tests){ els.tests.textContent = results.join('\n') + '\n\n' + (fails? 'FAIL' : 'PASS'); }
+      console.log(results.join('\n'), '\n', fails? 'FAIL':'PASS');
+    }
+    runTests();
+  })();
+  </script>
+</body>
+</html>
