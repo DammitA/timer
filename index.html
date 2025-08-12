@@ -40,7 +40,17 @@
     .kvs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-variant-numeric:tabular-nums}
     .kvs div{background:#0f141c;padding:8px;border-radius:10px}
     .kvs b{display:block;color:#c9d6e6;font-size:12px}
-    @media (max-width:720px){ .grid.cols{grid-template-columns:1fr} }
+    @media (max-width:720px){ 
+		.grid.cols{grid-template-columns:1fr} 
+		.btns { 
+			flex-direction: column; 
+			align-items: stretch; 
+			gap: 10px;
+	  	}
+	  	.btns .inline { width: 100%; }
+	  	#start { width: 100%; }              /* full-width Start */
+	  	.btns small { align-self: center; }  /* help text below buttons */
+	}
   </style>
 </head>
 <body>
@@ -53,78 +63,96 @@
       </div>
     </header>
 
-    <section class="panel grid cols">
-      <div class="grid">
-        <div>
-          <label>Shots per string</label>
-          <div class="row">
-            <input id="shots" type="range" min="1" max="30" step="1" />
-            <input id="shotsN" type="number" min="1" max="30" />
-          </div>
-        </div>
-        <div>
-          <label>Split time (s)</label>
-          <div class="row">
-            <input id="split" type="range" min="0.10" max="2.00" step="0.01" />
-            <input id="splitN" type="number" min="0.10" max="10" step="0.01" />
-          </div>
-        </div>
-        <div>
-          <label>First shot time (s) <span class="muted">(draw → first shot)</span></label>
-          <div class="row">
-            <input id="first" type="range" min="0.10" max="5.00" step="0.05" />
-            <input id="firstN" type="number" min="0.10" max="10" step="0.01" />
-          </div>
-          <div class="inline muted" style="margin-top:6px">
-            <input id="randomStart" type="checkbox" />
-            <span>Randomize draw delay:</span>
-            <label class="inline" style="gap:6px">min <input id="randMin" type="number" min="0.00" max="10" step="0.01" style="width:86px"/></label>
-            <label class="inline" style="gap:6px">max <input id="randMax" type="number" min="0.00" max="10" step="0.01" style="width:86px"/></label>
-          </div>
-        </div>
-        <div>
-          <label>Reload breaks</label>
-          <div class="row">
-            <input id="reloads" type="range" min="0" max="10" step="1" />
-            <input id="reloadsN" type="number" min="0" max="10" />
-          </div>
-        </div>
-        <div>
-          <label>Reload time (s)</label>
-          <div class="row">
-            <input id="reloadTime" type="range" min="0.10" max="5.00" step="0.05" />
-            <input id="reloadTimeN" type="number" min="0.10" max="10" step="0.01" />
-          </div>
-        </div>
-        <div>
-          <label>Cues</label>
-          <div class="inline">
-            <!-- Voice removed -->
-            <label class="inline"><input id="hapticsOn" type="checkbox"/> Haptics</label>
-          </div>
-        </div>
-      </div>
+	<!-- Display (always visible) -->
+	<section class="panel">
+	  <div class="grid">
+		<div class="ring">
+		  <svg id="ring" width="180" height="180" viewBox="0 0 120 120">
+			<circle cx="60" cy="60" r="54" fill="none" stroke="#1f2937" stroke-width="12"/>
+			<circle id="ringArc" cx="60" cy="60" r="54" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292"/>
+		  </svg>
+		</div>
 
-      <div class="grid">
-        <div class="ring">
-          <svg id="ring" width="180" height="180" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="54" fill="none" stroke="#1f2937" stroke-width="12"/>
-            <circle id="ringArc" cx="60" cy="60" r="54" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292"/>
-          </svg>
-        </div>
-        <div class="kvs">
-          <div><b>Status</b><div id="status" class="live">Idle</div></div>
-          <div><b>Next cue</b><div id="nextCue" class="live muted">—</div></div>
-          <div><b>Elapsed</b><div id="elapsed" class="live">0.00 s</div></div>
-          <div><b>Total plan</b><div id="planLen" class="live">0.00 s</div></div>
-        </div>
-        <div class="progress"><div id="bar" class="bar"></div></div>
-        <div class="inline">
-          <button id="testBeep" class="ghost">Test beep</button>
-          <button id="clear" class="ghost">Reset</button>
-        </div>
-      </div>
-    </section>
+		<div class="kvs">
+		  <div><b>Status</b><div id="status" class="live">Idle</div></div>
+		  <div><b>Next cue</b><div id="nextCue" class="live muted">—</div></div>
+		  <div><b>Elapsed</b><div id="elapsed" class="live">0.00 s</div></div>
+		  <div><b>Total plan</b><div id="planLen" class="live">0.00 s</div></div>
+		</div>
+
+		<div class="progress"><div id="bar" class="bar"></div></div>
+
+		<div class="inline">
+		  <button id="testBeep" class="ghost">Test beep</button>
+		  <button id="clear" class="ghost">Reset</button>
+		</div>
+	  </div>
+	</section>
+
+	<!-- Timer configuration (collapsible) -->
+	<section class="panel">
+	  <details>
+		<summary>Timer configuration</summary>
+		<div class="grid cols" style="margin-top:10px">
+		  <div class="grid">
+			<div>
+			  <label>Shots per string</label>
+			  <div class="row">
+				<input id="shots" type="range" min="1" max="30" step="1" />
+				<input id="shotsN" type="number" min="1" max="30" />
+			  </div>
+			</div>
+
+			<div>
+			  <label>Split time (s)</label>
+			  <div class="row">
+				<input id="split" type="range" min="0.10" max="2.00" step="0.01" />
+				<input id="splitN" type="number" min="0.10" max="10" step="0.01" />
+			  </div>
+			</div>
+
+			<div>
+			  <label>First shot time (s) <span class="muted">(draw → first shot)</span></label>
+			  <div class="row">
+				<input id="first" type="range" min="0.10" max="5.00" step="0.05" />
+				<input id="firstN" type="number" min="0.10" max="10" step="0.01" />
+			  </div>
+			  <div class="inline muted" style="margin-top:6px">
+				<input id="randomStart" type="checkbox" />
+				<span>Randomize draw delay:</span>
+				<label class="inline" style="gap:6px">min <input id="randMin" type="number" min="0.00" max="10" step="0.01" style="width:86px"/></label>
+				<label class="inline" style="gap:6px">max <input id="randMax" type="number" min="0.00" max="10" step="0.01" style="width:86px"/></label>
+			  </div>
+			</div>
+
+			<div>
+			  <label>Reload breaks</label>
+			  <div class="row">
+				<input id="reloads" type="range" min="0" max="10" step="1" />
+				<input id="reloadsN" type="number" min="0" max="10" />
+			  </div>
+			</div>
+
+			<div>
+			  <label>Reload time (s)</label>
+			  <div class="row">
+				<input id="reloadTime" type="range" min="0.10" max="5.00" step="0.05" />
+				<input id="reloadTimeN" type="number" min="0.10" max="10" step="0.01" />
+			  </div>
+			</div>
+
+			<div>
+			  <label>Cues</label>
+			  <div class="inline">
+				<!-- Voice removed -->
+				<label class="inline"><input id="hapticsOn" type="checkbox"/> Haptics</label>
+			  </div>
+			</div>
+		  </div>
+		</div>
+	  </details>
+	</section>
+
 
     <section class="panel btns">
       <div class="inline">
