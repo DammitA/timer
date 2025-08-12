@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Training Timer — v2 (fixed)</title>
   <style>
+
+
     :root{
       --bg:#0b0d10; --panel:#141820; --text:#e9eef5; --muted:#a7b0bf; --acc:#3ea0ff; --acc2:#34d399; --danger:#ef4444;
       --ring-size:180px;
@@ -51,6 +53,139 @@
 	  	#start { width: 100%; }              /* full-width Start */
 	  	.btns small { align-self: center; }  /* help text below buttons */
 	}
+
+
+	/* === Cowboy background + warm theme === */
+	:root{
+	  /* Warm, dusty palette that matches the image */
+	  --bg: rgba(24, 19, 14, 0.65);        /* translucent background over image */
+	  --panel: rgba(30, 24, 18, 0.78);     /* panels slightly stronger */
+	  --text: #F2E8D5;                     /* parchment */
+	  --muted: #D4C9B2;                    /* lighter parchment */
+	  --acc: #C57A3B;                      /* saddle / leather (accent) */
+	  --acc2: #78A36B;                     /* sage green (progress bar) */
+	  --danger: #B24A3A;                   /* brick red for Stop */
+	}
+
+	/* Use the image as a fixed full-bleed background */
+	body::before{
+	  content:"";
+	  position:fixed;
+	  inset:0;
+	  background: url("ginger_cowboy.png") center / cover no-repeat fixed;
+	  z-index:-2;
+	  /* you can tweak these to taste */
+	  filter: saturate(0.95) contrast(0.95) brightness(0.82);
+	}
+
+	/* Subtle vignette & warm wash overlay to improve text readability */
+	body::after{
+	  content:"";
+	  position:fixed;
+	  inset:0;
+	  z-index:-1;
+	  background:
+		radial-gradient(120% 80% at 50% 20%, rgba(0,0,0,0.18), rgba(0,0,0,0.55)),
+		linear-gradient(0deg, rgba(90,62,32,0.10), rgba(90,62,32,0.10));
+	  pointer-events:none;
+	}
+
+	/* Panels go translucent and a bit softer */
+	.panel{
+	  background: var(--panel);
+	  backdrop-filter: blur(2px);
+	  -webkit-backdrop-filter: blur(2px);
+	  border: 1px solid rgba(255,255,255,0.05);
+	  box-shadow: 0 10px 32px rgba(0,0,0,.35);
+	}
+
+	/* Typography + buttons harmonize with the theme */
+	body{ color: var(--text); }
+	label{ color: var(--muted); }
+	button.primary{ background: var(--acc); color: #2B1B12; }
+	button.ghost{ background: rgba(255,255,255,0.06); color: var(--text); }
+	button.danger{ background: var(--danger); color: #1a0e0e; }
+
+	/* Inputs: darker glassy look */
+	input[type=number], input[type=text], select{
+	  background: rgba(0,0,0,0.35);
+	  border: 1px solid rgba(255,255,255,0.08);
+	  color: var(--text);
+	}
+	input[type=range]{
+	  accent-color: var(--acc);
+	}
+
+	/* Progress + ring pick up the new accents */
+	.bar{ background: var(--acc2); }
+	.ring svg #ringArc{ stroke: var(--acc); }
+
+	/* Optional: small text-shadow to lift text from the image */
+	.kvs, header, footer, .live{
+	  text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+	}
+
+	/* Mobile: keep Start full-width; push help text below */
+	@media (max-width: 720px){
+	  .btns{ flex-direction: column; align-items: stretch; gap: 10px; }
+	  .btns .inline{ width:100%; }
+	  #start{ width:100%; }
+	  .btns small{ align-self:center; }
+	}
+
+	/* === Warm leather/sepia accents; kill the blue === */
+	:root{
+	  --bg: rgba(24, 19, 14, 0.65);
+	  --panel: rgba(30, 24, 18, 0.78);
+	  --text: #F2E8D5;
+	  --muted: #D4C9B2;
+
+	  /* Accents tuned away from blue/green */
+	  --acc:  #B37A3E;   /* saddle leather: ring + primary button */
+	  --acc2: #C79E63;   /* brass/gold: progress bar */
+	  --danger: #B24A3A; /* brick red */
+	}
+
+	/* Inputs pick up the warm accent */
+	input[type=range]{ accent-color: var(--acc); }
+
+	/* Progress + ring now use the warm tones */
+	.bar{ background: var(--acc2) !important; }
+	.ring svg #ringArc{ stroke: var(--acc) !important; }
+
+	/* Full-bleed cowboy background with focal-point shifts */
+	body::before{
+	  content:"";
+	  position:fixed; inset:0; z-index:-2;
+	  background: url("ginger_cowboy.png") center / cover no-repeat;
+	  /* gentle warmth + lift */
+	  filter: saturate(0.95) contrast(0.95) brightness(0.84);
+	}
+
+	/* Contrast overlay for readability */
+	body::after{
+	  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+	  background:
+		radial-gradient(120% 80% at 50% 15%, rgba(0,0,0,0.15), rgba(0,0,0,0.55)),
+		linear-gradient(0deg, rgba(90,62,32,0.10), rgba(90,62,32,0.10));
+	}
+
+	/* On wide screens, slide the background so the cowboy sits beside the content */
+	@media (min-width: 1200px){
+	  /* nudge image so more of the right side (face + gun) is visible */
+	  body::before{ background-position: 62% 30%; } /* try 58–70% to taste */
+	}
+
+	/* On ultra-wide monitors, push a bit further */
+	@media (min-width: 1600px){
+	  body::before{ background-position: 68% 70%; }
+	}
+
+	/* On phones/tablets, stay centered (portrait works well there) */
+	@media (max-width: 899px){
+	  body::before{ background-position: 50% 50%; }
+	}
+
   </style>
 </head>
 <body>
