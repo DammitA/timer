@@ -36,6 +36,11 @@
     .primary{background:var(--acc);color:#031325;min-width:140px}
     .ghost{background:#1b2330;color:var(--text)}
     .danger{background:var(--danger);color:#1a0b0b}
+    /* Start button visual when running/disabled */
+    #start.running, #start:disabled{
+      box-shadow: inset 0 0 0 9999px rgba(0,0,0,0.18);
+      filter: saturate(0.95);
+    }
     /*.progress{height:10px;background:#1b2330;border-radius:999px;overflow:hidden} */
 	.progress{
 	  height:10px;
@@ -69,6 +74,14 @@
 	}
 
     .kvs b{display:block;color:#c9d6e6;font-size:12px}
+    /* Desktop: Start and Stop fill the row; tweak paddings */
+    @media (min-width:721px){
+      .btns > #start, .btns .controls-row{ flex:1 1 0; }
+      .btns .controls-row{ display:flex; }
+      .btns .controls-row button{ width:100%; }
+      #start{ padding-left:24px; }
+      .btns small{ padding-right:8px; }
+    }
     @media (max-width:720px){ 
         .grid.cols{grid-template-columns:1fr} 
         .btns { 
@@ -224,7 +237,7 @@
       <div class="presets">
         <div class="preset-actions">
           <button id="savePreset" class="ghost" title="Save current settings as preset">Save Preset</button>
-          <button id="deletePreset" class="ghost" title="Delete selected preset">Delete Preset</button>
+          <button id="deletePreset" class="danger" title="Delete selected preset">Delete Preset</button>
         </div>
         <select id="presetSelect" title="Load a preset"></select>
       </div>
@@ -326,10 +339,9 @@
     <section class="panel btns">
       <button id="start" class="primary">Start</button>
       <div class="inline controls-row">
-        <button id="pause" class="ghost">Pause</button>
         <button id="stop" class="danger">Stop</button>
       </div>
-      <small class="muted">Space: Start/Pause • S: Stop</small>
+      <small class="muted">Space: Start/Stop</small>
     </section>
 
     <section class="panel">
@@ -372,7 +384,7 @@
       <pre id="tests" style="white-space:pre-wrap"></pre>
     </details>
 
-    <footer class="muted">No backend. Fully offline. Built with Web Audio scheduling & Wake Lock (where supported).</footer>
+    
   </div>
 
   <script>
@@ -387,7 +399,7 @@
       reloads: $('reloads'), reloadsN: $('reloadsN'),
       reloadTime: $('reloadTime'), reloadTimeN: $('reloadTimeN'),
       hapticsOn: $('hapticsOn'),
-      start: $('start'), pause: $('pause'), stop: $('stop'), testBeep: $('testBeep'), clear: $('clear'),
+      start: $('start'), stop: $('stop'), testBeep: $('testBeep'), clear: $('clear'),
       status: $('status'), nextCue: $('nextCue'), elapsed: $('elapsed'), planLen: $('planLen'),
       ringArc: $('ringArc'), bar: $('bar'),
       freq: $('freq'), len: $('len'), freq0: $('freq0'), len0: $('len0'),
@@ -529,7 +541,7 @@
     }
 
     // ===== Audio engine =====
-    var audioCtx = null; var wakeLock = null; var startedOnce=false; var runStart=0; var paused=false; var pauseAt=0;
+    var audioCtx = null; var wakeLock = null; var startedOnce=false; var runStart=0;
 var activeSources = []; var timers = [];
     async function ensureAudio(){
       if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
@@ -623,11 +635,12 @@ var activeSources = []; var timers = [];
       var cfg = currentSettings();
       var out = buildTimeline(cfg);
       var events = out.events; var total = out.total;
-      current = {cfg:cfg, events:events, total:total, i:0}; schedule.length=0; paused=false; 
+      current = {cfg:cfg, events:events, total:total, i:0}; schedule.length=0;
       var SAFETY_OFFSET = 0.12; runStart = audioCtx.currentTime + SAFETY_OFFSET;
       // Pre-roll click disabled for pure sine profile
     
       els.start.disabled = true;
+      try{ els.start.classList.add('running'); }catch(e){}
 
       renderSummary(events);
       els.planLen.textContent = total.toFixed(2)+' s';
@@ -650,9 +663,8 @@ var activeSources = []; var timers = [];
       }
     }
 
-    function pause(){ if(!current||paused) return; paused=true; pauseAt = audioCtx.currentTime; status('Paused'); }
-    function resume(){ if(!current||!paused) return; var shift = audioCtx.currentTime - pauseAt; schedule.forEach(function(s){ if(s.at>pauseAt) s.at += shift; }); runStart += shift; paused=false; status('Running'); tick(); }
-    function stop(){ cancelAllAudio(); current=null; schedule.length=0; status('Idle'); updatePlanStats(true); if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel(); setRing(0); setBar(0); els.nextCue.textContent='—'; els.elapsed.textContent='0.00 s'; els.start.disabled = false; }
+    /* pause/resume removed */
+    function stop(){ cancelAllAudio(); current=null; schedule.length=0; status('Idle'); updatePlanStats(true); if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel(); setRing(0); setBar(0); els.nextCue.textContent='—'; els.elapsed.textContent='0.00 s'; els.start.disabled = false; try{ els.start.classList.remove('running'); }catch(e){} }
 
     function status(txt){ els.status.textContent = txt; }
 
@@ -664,7 +676,7 @@ var activeSources = []; var timers = [];
         if(ev.type==='draw') status('Running');
         if(ev.type==='shot') els.nextCue.textContent = 'Shot ' + (ev.n+1 || '');
         if(ev.type==='reload') els.nextCue.textContent = 'Reload';
-        if(ev.type==='end'){ status('Done'); setRing(0); setBar(1); els.start.disabled = false; return; }
+        if(ev.type==='end'){ status('Done'); setRing(0); setBar(1); els.start.disabled = false; try{ els.start.classList.remove('running'); }catch(e){}; return; }
       }
       var elapsed = now - runStart; els.elapsed.textContent = elapsed.toFixed(2)+ ' s';
       setBar(Math.min(1, elapsed / current.total));
@@ -687,15 +699,18 @@ var activeSources = []; var timers = [];
     }
 
     // Buttons
-    els.start.addEventListener('click', function(){ if(paused) resume(); else start(); });
-    els.pause.addEventListener('click', function(){ if(!current) return; if(paused) resume(); else pause(); });
+    els.start.addEventListener('click', function(){ start(); });
     els.stop.addEventListener('click', stop);
     els.testBeep.addEventListener('click', function(){ ensureAudio(); var now=audioCtx.currentTime; beep(now+0.05, +els.freq.value, +els.len.value); });
     els.clear.addEventListener('click', function(){ applySettings({shots:6, split:0.25, first:0.75, reloads:0, reloadTime:1.2, randomStart:true, randMin:2.0, randMax:4.0, hapticsOn:false, freq:1000, len:0.15, freq0:800, len0:0.25}); stop(); });
 
     // Keyboard
     window.addEventListener('keydown', function(e){
-      if(e.code==='Space'){ e.preventDefault(); if(!startedOnce) ensureAudio(); if(paused) resume(); else if(current) pause(); else start(); }
+      if(e.code==='Space'){
+        e.preventDefault();
+        if(!startedOnce) ensureAudio();
+        if(current) stop(); else start();
+      }
       if(e.key==='s' || e.key==='S'){ stop(); }
     });
 
