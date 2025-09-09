@@ -16,6 +16,9 @@
     body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,Segoe UI,Roboto,Arial,sans-serif}
     .wrap{max-width:900px;margin:0 auto;padding:16px;display:grid;gap:16px}
     header{display:flex;align-items:center;justify-content:space-between}
+    .presets{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+    .preset-actions{display:flex;gap:8px}
+    .presets select{max-width:100%}
     h1{font-size:20px;margin:0}
     .grid{display:grid;gap:12px}
     .grid.cols{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -67,16 +70,17 @@
 
     .kvs b{display:block;color:#c9d6e6;font-size:12px}
     @media (max-width:720px){ 
-		.grid.cols{grid-template-columns:1fr} 
-		.btns { 
-			flex-direction: column; 
-			align-items: stretch; 
-			gap: 10px;
-	  	}
-	  	.btns .inline { width: 100%; }
-	  	#start { width: 100%; }              /* full-width Start */
-	  	.btns small { align-self: center; }  /* help text below buttons */
-	}
+        .grid.cols{grid-template-columns:1fr} 
+        .btns { 
+            flex-direction: column; 
+            align-items: stretch; 
+            gap: 10px;
+          }
+          .btns .inline { width: 100%; }
+          #start { width: 100%; padding-top: 17px; padding-bottom: 17px; } /* ~20% taller */
+          .btns .controls-row button { flex: 1; } /* Pause/Stop share full row */
+          .btns small { align-self: center; }  /* help text below buttons */
+    }
 
 
 	/* === Cowboy background + warm theme === */
@@ -153,7 +157,8 @@
 	@media (max-width: 720px){
 	  .btns{ flex-direction: column; align-items: stretch; gap: 10px; }
 	  .btns .inline{ width:100%; }
-	  #start{ width:100%; }
+	  #start{ width:100%; padding-top:17px; padding-bottom:17px; }
+	  .btns .controls-row button{ flex:1; }
 	  .btns small{ align-self:center; }
 	}
 
@@ -216,50 +221,25 @@
   <div class="wrap">
     <header>
       <h1>Training Timer</h1>
-      <div class="inline">
-        <button id="savePreset" class="ghost" title="Save current settings as preset">Save Preset</button>
+      <div class="presets">
+        <div class="preset-actions">
+          <button id="savePreset" class="ghost" title="Save current settings as preset">Save Preset</button>
+          <button id="deletePreset" class="ghost" title="Delete selected preset">Delete Preset</button>
+        </div>
         <select id="presetSelect" title="Load a preset"></select>
       </div>
     </header>
 
-	<!-- Display (always visible) -->
+	<!-- Timer configuration (now always visible and at top) -->
 	<section class="panel">
-	  <div class="grid">
-		<div class="ring">
-		  <svg id="ring" width="180" height="180" viewBox="0 0 120 120">
-			<!-- <circle cx="60" cy="60" r="54" fill="none" stroke="#1f2937" stroke-width="12"/> --!>
-			<circle cx="60" cy="60" r="54" fill="none" stroke="rgba(179,122,62,0.35)" stroke-width="12"/>
-			<circle id="ringArc" cx="60" cy="60" r="54" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292"/>
-		  </svg>
-		</div>
-
-		<div class="kvs">
-		  <div><b>Status</b><div id="status" class="live">Idle</div></div>
-		  <div><b>Next cue</b><div id="nextCue" class="live muted">—</div></div>
-		  <div><b>Elapsed</b><div id="elapsed" class="live">0.00 s</div></div>
-		  <div><b>Total plan</b><div id="planLen" class="live">0.00 s</div></div>
-		</div>
-
-		<div class="progress"><div id="bar" class="bar"></div></div>
-
-		<div class="inline">
-		  <button id="testBeep" class="ghost">Test beep</button>
-		  <button id="clear" class="ghost">Reset</button>
-		</div>
-	  </div>
-	</section>
-
-	<!-- Timer configuration (collapsible) -->
-	<section class="panel">
-	  <details>
-		<summary>Timer configuration</summary>
+	  <h2 style="margin:0 0 8px 0; font-size:16px; color:var(--muted);">Timer configuration</h2>
 		<div class="grid cols" style="margin-top:10px">
 		  <div class="grid">
 			<div>
 			  <label>Shots per string</label>
 			  <div class="row">
-				<input id="shots" type="range" min="1" max="30" step="1" />
-				<input id="shotsN" type="number" min="1" max="30" />
+				<input id="shots" type="range" min="1" max="10" step="1" />
+				<input id="shotsN" type="number" min="1" max="10" />
 			  </div>
 			</div>
 
@@ -267,37 +247,37 @@
 			  <label>Split time (s)</label>
 			  <div class="row">
 				<input id="split" type="range" min="0.10" max="2.00" step="0.01" />
-				<input id="splitN" type="number" min="0.10" max="10" step="0.01" />
+				<input id="splitN" type="number" min="0.10" max="10" step="0.01" inputmode="decimal" />
 			  </div>
 			</div>
 
 			<div>
 			  <label>First shot time (s) <span class="muted">(draw → first shot)</span></label>
 			  <div class="row">
-				<input id="first" type="range" min="0.10" max="5.00" step="0.05" />
-				<input id="firstN" type="number" min="0.10" max="10" step="0.01" />
+				<input id="first" type="range" min="0.10" max="3.00" step="0.05" />
+				<input id="firstN" type="number" min="0.10" max="3.00" step="0.01" inputmode="decimal" />
 			  </div>
 			  <div class="inline muted" style="margin-top:6px">
 				<input id="randomStart" type="checkbox" />
 				<span>Randomize draw delay:</span>
-				<label class="inline" style="gap:6px">min <input id="randMin" type="number" min="0.00" max="10" step="0.01" style="width:86px"/></label>
-				<label class="inline" style="gap:6px">max <input id="randMax" type="number" min="0.00" max="10" step="0.01" style="width:86px"/></label>
+				<label class="inline" style="gap:6px">min <input id="randMin" type="number" min="0.00" max="10" step="0.01" inputmode="decimal" style="width:86px"/></label>
+				<label class="inline" style="gap:6px">max <input id="randMax" type="number" min="0.00" max="10" step="0.01" inputmode="decimal" style="width:86px"/></label>
 			  </div>
 			</div>
 
 			<div>
 			  <label>Reload breaks</label>
 			  <div class="row">
-				<input id="reloads" type="range" min="0" max="10" step="1" />
-				<input id="reloadsN" type="number" min="0" max="10" />
+				<input id="reloads" type="range" min="0" max="3" step="1" />
+				<input id="reloadsN" type="number" min="0" max="3" />
 			  </div>
 			</div>
 
 			<div>
 			  <label>Reload time (s)</label>
 			  <div class="row">
-				<input id="reloadTime" type="range" min="0.10" max="5.00" step="0.05" />
-				<input id="reloadTimeN" type="number" min="0.10" max="10" step="0.01" />
+				<input id="reloadTime" type="range" min="0.10" max="3.00" step="0.05" />
+				<input id="reloadTimeN" type="number" min="0.10" max="3.00" step="0.01" inputmode="decimal" />
 			  </div>
 			</div>
 
@@ -310,13 +290,42 @@
 			</div>
 		  </div>
 		</div>
+	</section>
+
+	<!-- Display (now collapsible and below config) -->
+	<section class="panel">
+	  <details>
+		<summary>Display & status</summary>
+		<div class="grid" style="margin-top:10px">
+		  <div class="ring">
+			<svg id="ring" width="180" height="180" viewBox="0 0 120 120">
+			  <!-- <circle cx="60" cy="60" r="54" fill="none" stroke="#1f2937" stroke-width="12"/> --!>
+			  <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(179,122,62,0.35)" stroke-width="12"/>
+			  <circle id="ringArc" cx="60" cy="60" r="54" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292"/>
+			</svg>
+		  </div>
+
+		  <div class="kvs">
+			<div><b>Status</b><div id="status" class="live">Idle</div></div>
+			<div><b>Next cue</b><div id="nextCue" class="live muted">—</div></div>
+			<div><b>Elapsed</b><div id="elapsed" class="live">0.00 s</div></div>
+			<div><b>Total plan</b><div id="planLen" class="live">0.00 s</div></div>
+		  </div>
+
+		  <div class="progress"><div id="bar" class="bar"></div></div>
+
+		  <div class="inline">
+			<button id="testBeep" class="ghost">Test beep</button>
+			<button id="clear" class="ghost">Reset</button>
+		  </div>
+		</div>
 	  </details>
 	</section>
 
 
     <section class="panel btns">
-      <div class="inline">
-        <button id="start" class="primary">Start</button>
+      <button id="start" class="primary">Start</button>
+      <div class="inline controls-row">
         <button id="pause" class="ghost">Pause</button>
         <button id="stop" class="danger">Stop</button>
       </div>
@@ -333,7 +342,7 @@
           </div>
           <div>
             <label>Normal beep length (s)</label>
-            <input id="len" type="number" min="0.05" max="1.0" step="0.01" value="0.15"/>
+            <input id="len" type="number" min="0.05" max="1.0" step="0.01" inputmode="decimal" value="0.15"/>
           </div>
           <div>
             <label>Draw beep frequency (Hz)</label>
@@ -341,7 +350,7 @@
           </div>
           <div>
             <label>Draw beep length (s)</label>
-            <input id="len0" type="number" min="0.05" max="1.5" step="0.01" value="0.25"/>
+            <input id="len0" type="number" min="0.05" max="1.5" step="0.01" inputmode="decimal" value="0.25"/>
           </div>
         </div>
       </details>
@@ -383,16 +392,42 @@
       ringArc: $('ringArc'), bar: $('bar'),
       freq: $('freq'), len: $('len'), freq0: $('freq0'), len0: $('len0'),
       summary: $('summary'), copySummary: $('copySummary'), exportCsv: $('exportCsv'),
-      presetSelect: $('presetSelect'), savePreset: $('savePreset'),
+      presetSelect: $('presetSelect'), savePreset: $('savePreset'), deletePreset: $('deletePreset'),
       tests: $('tests')
     };
+
+    // Match preset selector width to combined Save/Delete buttons
+    var presetActionsEl = null;
+    function syncPresetWidth(){
+      try{
+        if(!presetActionsEl){ presetActionsEl = document.querySelector('.preset-actions'); }
+        if(presetActionsEl && els.presetSelect){
+          var w = presetActionsEl.offsetWidth;
+          els.presetSelect.style.width = w + 'px';
+          els.presetSelect.style.maxWidth = '100%';
+        }
+      }catch(e){}
+    }
+    window.syncPresetWidth = syncPresetWidth;
+    window.addEventListener('resize', syncPresetWidth);
 
     // Pair range+number controls
     function bindPair(range, number, key, onChange){
       var r = els[range], n = els[number];
       function apply(v){ v = +v; r.value = v; n.value = v; if(onChange) onChange(v); }
+      // Slider updates immediately
       r.addEventListener('input', function(e){ apply(e.target.value); });
-      n.addEventListener('input', function(e){ apply(e.target.value); });
+      // Number field: only commit on blur or Enter to avoid clobbering mid-typing
+      n.addEventListener('change', function(e){
+        var v = parseFloat(e.target.value);
+        if(!isNaN(v)) apply(v);
+      });
+      n.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){
+          var v = parseFloat(n.value);
+          if(!isNaN(v)) apply(v);
+        }
+      });
       var saved = load()[key];
       if(saved!=null) apply(saved); else apply(r.value);
     }
@@ -411,9 +446,9 @@
 
     // Other controls
     var st = load();
-    els.randomStart.checked = !!st.randomStart;
-    els.randMin.value = (st.randMin != null ? st.randMin : 0.00);
-    els.randMax.value = (st.randMax != null ? st.randMax : 2.50);
+    els.randomStart.checked = (st.randomStart != null ? !!st.randomStart : true);
+    els.randMin.value = (st.randMin != null ? st.randMin : 2.00);
+    els.randMax.value = (st.randMax != null ? st.randMax : 4.00);
     els.freq.value = (st.freq != null ? st.freq : 1000);
     els.len.value = (st.len != null ? st.len : 0.15);
     els.freq0.value = (st.freq0 != null ? st.freq0 : 800);
@@ -441,6 +476,7 @@
         opts += '<option value="'+k+'">'+k+'</option>';
       });
       els.presetSelect.innerHTML = opts;
+      if(window.syncPresetWidth) window.syncPresetWidth();
     }
     fillPresetSelect();
 
@@ -448,6 +484,14 @@
       var name = prompt('Preset name?'); if(!name) return;
       var preset = currentSettings();
       var ps = loadPresets(); ps[name]=preset; savePresets(ps); fillPresetSelect();
+    });
+    els.deletePreset.addEventListener('click', function(){
+      var name = els.presetSelect && els.presetSelect.value;
+      if(!name){ alert('Select a preset to delete.'); return; }
+      if(!confirm('Delete preset "'+name+'"?')) return;
+      var ps = loadPresets();
+      if(ps && ps[name]){ delete ps[name]; savePresets(ps); fillPresetSelect(); }
+      if(els.presetSelect) els.presetSelect.value = '';
     });
     els.presetSelect.addEventListener('change', function(e){
       var name = e.target.value; if(!name) return;
@@ -505,34 +549,16 @@ var activeSources = []; var timers = [];
 
     function beep(at, freq, len){
       if(!audioCtx) return;
-      var o = audioCtx.createOscillator(); var g = audioCtx.createGain();
-      o.type = 'sine'; o.frequency.setValueAtTime(freq, at);
-      g.gain.setValueAtTime(0, at);
-      g.gain.linearRampToValueAtTime(0.8, at+0.005);
-      g.gain.linearRampToValueAtTime(0.0, at+len);
-      o.connect(g).connect(audioCtx.destination);
-      try{ o.start(at); o.stop(at+len+0.05); }catch(e){}
+      var o = audioCtx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, at);
+      o.connect(audioCtx.destination);
+      try{ o.start(at); o.stop(at+len); }catch(e){}
       activeSources.push(o);
     }
 
     // Micro pre-roll click to 'wake' the output just before the draw beep
-    function primeAudio(at){
-      if(!audioCtx) return;
-      try{
-        var o = audioCtx.createOscillator();
-        var g = audioCtx.createGain();
-        o.type = 'sine';
-        o.frequency.setValueAtTime(1000, at);
-        // very small audible blip
-        g.gain.setValueAtTime(0.0, at);
-        g.gain.linearRampToValueAtTime(0.02, at + 0.006);
-        g.gain.linearRampToValueAtTime(0.0, at + 0.012);
-        o.connect(g).connect(audioCtx.destination);
-        o.start(at);
-        o.stop(at + 0.02);
-        activeSources.push(o);
-      }catch(e){}
-    }
+    function primeAudio(at){ /* disabled: no pre-roll shaping for pure sine profile */ }
 
 
     function haptic(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
@@ -599,14 +625,7 @@ var activeSources = []; var timers = [];
       var events = out.events; var total = out.total;
       current = {cfg:cfg, events:events, total:total, i:0}; schedule.length=0; paused=false; 
       var SAFETY_OFFSET = 0.12; runStart = audioCtx.currentTime + SAFETY_OFFSET;
-      // Schedule a micro pre-roll click ~30ms before the draw beep (clamped to a bit in the future)
-      var drawEv = events.find(function(e){ return e.type==='draw'; });
-      if(drawEv){
-        var preAt = runStart + drawEv.t - 0.03;
-        var minAt = audioCtx.currentTime + 0.005;
-        if(preAt < minAt) preAt = minAt;
-        primeAudio(preAt);
-      }
+      // Pre-roll click disabled for pure sine profile
     
       els.start.disabled = true;
 
@@ -672,7 +691,7 @@ var activeSources = []; var timers = [];
     els.pause.addEventListener('click', function(){ if(!current) return; if(paused) resume(); else pause(); });
     els.stop.addEventListener('click', stop);
     els.testBeep.addEventListener('click', function(){ ensureAudio(); var now=audioCtx.currentTime; beep(now+0.05, +els.freq.value, +els.len.value); });
-    els.clear.addEventListener('click', function(){ applySettings({shots:6, split:0.25, first:0.75, reloads:0, reloadTime:1.2, randomStart:false, randMin:0.0, randMax:2.5, hapticsOn:false, freq:1000, len:0.15, freq0:800, len0:0.25}); stop(); });
+    els.clear.addEventListener('click', function(){ applySettings({shots:6, split:0.25, first:0.75, reloads:0, reloadTime:1.2, randomStart:true, randMin:2.0, randMax:4.0, hapticsOn:false, freq:1000, len:0.15, freq0:800, len0:0.25}); stop(); });
 
     // Keyboard
     window.addEventListener('keydown', function(e){
@@ -694,6 +713,8 @@ var activeSources = []; var timers = [];
       if(reset){ els.summary.textContent=''; }
     }
     updatePlanStats();
+    // ensure preset select width syncs after layout
+    setTimeout(syncPresetWidth, 0);
 
     // iOS autoplay fix — create AudioContext on first tap anywhere
     window.addEventListener('pointerdown', function(){ if(!audioCtx) ensureAudio(); }, {once:true});
