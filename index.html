@@ -270,21 +270,21 @@
 				<input id="first" type="range" min="0.10" max="3.00" step="0.05" />
 				<input id="firstN" type="number" min="0.10" max="3.00" step="0.01" inputmode="decimal" />
 			  </div>
-			  <div class="inline muted" style="margin-top:6px">
-				<input id="randomStart" type="checkbox" />
-				<span>Randomize draw delay:</span>
-				<label class="inline" style="gap:6px">min <input id="randMin" type="number" min="0.00" max="10" step="0.01" inputmode="decimal" style="width:86px"/></label>
-				<label class="inline" style="gap:6px">max <input id="randMax" type="number" min="0.00" max="10" step="0.01" inputmode="decimal" style="width:86px"/></label>
-			  </div>
-			</div>
+              <div class="inline muted" style="margin-top:6px">
+                <input id="randomStart" type="checkbox" />
+                <span>Random Start (s):</span>
+                <label class="inline" style="gap:6px">min <input id="randMin" type="number" min="0.00" max="10" step="0.01" inputmode="decimal" style="width:86px"/></label>
+                <label class="inline" style="gap:6px">max <input id="randMax" type="number" min="0.00" max="10" step="0.01" inputmode="decimal" style="width:86px"/></label>
+              </div>
+            </div>
 
-			<div>
-			  <label>Reload breaks</label>
-			  <div class="row">
-				<input id="reloads" type="range" min="0" max="3" step="1" />
-				<input id="reloadsN" type="number" min="0" max="3" />
-			  </div>
-			</div>
+            <div>
+              <label>Reloads</label>
+              <div class="row">
+                <input id="reloads" type="range" min="0" max="3" step="1" />
+                <input id="reloadsN" type="number" min="0" max="3" />
+              </div>
+            </div>
 
 			<div>
 			  <label>Reload time (s)</label>
@@ -646,10 +646,25 @@ var activeSources = []; var timers = [];
       els.planLen.textContent = total.toFixed(2)+' s';
       status('Armed');
 
-      events.forEach(function(ev){
+      events.forEach(function(ev, idx){
         var at = runStart + ev.t;
-        if(ev.type==='draw') beep(at, cfg.freq0, cfg.len0);
-        else if(ev.type==='shot' || ev.type==='reload') beep(at, cfg.freq, cfg.len);
+        var shouldBeep = false;
+        if(ev.type === 'draw'){
+          shouldBeep = true;
+          if(shouldBeep) beep(at, cfg.freq0, cfg.len0);
+        } else if(ev.type === 'shot'){
+          shouldBeep = true;
+          if(shouldBeep) beep(at, cfg.freq, cfg.len);
+        } else if(ev.type === 'reload'){
+          // Avoid double-beep: skip reload beep if a shot is scheduled at the exact same time
+          var shotAtSameTime = false;
+          for(var j=0;j<events.length;j++){
+            if(j!==idx && events[j].t === ev.t && events[j].type === 'shot'){ shotAtSameTime = true; break; }
+          }
+          if(!shotAtSameTime){
+            beep(at, cfg.freq, cfg.len);
+          }
+        }
         schedule.push({at:at, ev:ev});
       });
 
