@@ -3,10 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Training Timer — v2 (fixed)</title>
+  <title>Training Timer — Mic</title>
   <style>
-
-
     :root{
       --bg:#0b0d10; --panel:#141820; --text:#e9eef5; --muted:#a7b0bf; --acc:#3ea0ff; --acc2:#34d399; --danger:#ef4444;
       --ring-size:180px;
@@ -26,9 +24,7 @@
     label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
     .row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
     input[type=number], input[type=text]{width:110px}
-    input[type=number], input[type=text], select{
-      background:#0e1218;color:var(--text);border:1px solid #1f2632;border-radius:10px;padding:10px 12px;
-    }
+    input[type=number], input[type=text], select{background:#0e1218;color:var(--text);border:1px solid #1f2632;border-radius:10px;padding:10px 12px}
     input[type=range]{width:100%}
     .inline{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .btns{position:sticky;bottom:0;display:flex;gap:12px;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(11,13,16,0),rgba(11,13,16,.9));padding:8px 0}
@@ -36,204 +32,42 @@
     .primary{background:var(--acc);color:#031325;min-width:140px}
     .ghost{background:#1b2330;color:var(--text)}
     .danger{background:var(--danger);color:#1a0b0b}
-    /* Start button visual when running/disabled */
-    #start.running, #start:disabled{
-      box-shadow: inset 0 0 0 9999px rgba(0,0,0,0.18);
-      filter: saturate(0.95);
-    }
-    /*.progress{height:10px;background:#1b2330;border-radius:999px;overflow:hidden} */
-	.progress{
-	  height:10px;
-	  background: rgba(179,122,62,0.35);  /* warm track */
-	  border-radius:6px;
-	  overflow:hidden;
-	}
+    #start.running, #start:disabled{box-shadow: inset 0 0 0 9999px rgba(0,0,0,0.18);filter:saturate(0.95)}
+    .progress{height:10px;background: rgba(179,122,62,0.35);border-radius:6px;overflow:hidden}
     .bar{height:100%;width:0;background:var(--acc2)}
     .ring{width:var(--ring-size);height:var(--ring-size);display:grid;place-items:center;margin:auto}
     .ring svg{transform:rotate(-90deg)}
     .live{min-height:2.2em}
     .muted{color:var(--muted)}
-    /*.kvs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-variant-numeric:tabular-nums} */
-	.kvs{
-	  display:grid;
-	  gap:6px;
-	  background: rgba(30, 24, 18, 0.65);       /* warm translucent panel */
-	  padding: 10px;
-	  border-radius: 12px;
-	  border: 1px solid rgba(199,158,99,0.25);  /* subtle brass edge */
-	  grid-template-columns:repeat(2,1fr)
-	}
-
-    /*.kvs div{background:#0f141c;padding:8px;border-radius:10px} */
-	/* Warmer pill backgrounds for Status / Next cue / Elapsed / Total plan */
-	.kvs div{
-	  background: rgba(179,122,62,0.1);          /* saddle-leather tint */
-	  padding: 8px;
-	  border-radius: 10px;
-	  border: 1px solid rgba(199,158,99,0.1);    /* subtle brass edge */
-	}
-
+    .kvs{display:grid;gap:6px;background: rgba(30, 24, 18, 0.65);padding: 10px;border-radius: 12px;border: 1px solid rgba(199,158,99,0.25);grid-template-columns:repeat(2,1fr)}
+    .kvs div{background: rgba(179,122,62,0.1);padding: 8px;border-radius: 10px;border: 1px solid rgba(199,158,99,0.1)}
     .kvs b{display:block;color:#c9d6e6;font-size:12px}
-    /* Desktop: Start and Stop fill the row; tweak paddings */
-    @media (min-width:721px){
-      .btns > #start, .btns .controls-row{ flex:1 1 0; }
-      .btns .controls-row{ display:flex; }
-      .btns .controls-row button{ width:100%; }
-      #start{ padding-left:24px; }
-      .btns small{ padding-right:8px; }
-    }
-    @media (max-width:720px){ 
-        .grid.cols{grid-template-columns:1fr} 
-        .btns { 
-            flex-direction: column; 
-            align-items: stretch; 
-            gap: 10px;
-          }
-          .btns .inline { width: 100%; }
-          #start { width: 100%; padding-top: 17px; padding-bottom: 17px; } /* ~20% taller */
-          .btns .controls-row button { flex: 1; } /* Pause/Stop share full row */
-          .btns small { align-self: center; }  /* help text below buttons */
-    }
-
-
-	/* === Cowboy background + warm theme === */
-	:root{
-	  /* Warm, dusty palette that matches the image */
-	  --bg: rgba(24, 19, 14, 0.65);        /* translucent background over image */
-	  --panel: rgba(30, 24, 18, 0.78);     /* panels slightly stronger */
-	  --text: #F2E8D5;                     /* parchment */
-	  --muted: #D4C9B2;                    /* lighter parchment */
-	  --acc: #C57A3B;                      /* saddle / leather (accent) */
-	  --acc2: #78A36B;                     /* sage green (progress bar) */
-	  --danger: #B24A3A;                   /* brick red for Stop */
-	}
-
-	/* Use the image as a fixed full-bleed background */
-	body::before{
-	  content:"";
-	  position:fixed;
-	  inset:0;
-	  background: url("ginger_cowboy.png") center / cover no-repeat fixed;
-	  z-index:-2;
-	  /* you can tweak these to taste */
-	  filter: saturate(0.95) contrast(0.95) brightness(0.82);
-	}
-
-	/* Subtle vignette & warm wash overlay to improve text readability */
-	body::after{
-	  content:"";
-	  position:fixed;
-	  inset:0;
-	  z-index:-1;
-	  background:
-		radial-gradient(120% 80% at 50% 20%, rgba(0,0,0,0.18), rgba(0,0,0,0.55)),
-		linear-gradient(0deg, rgba(90,62,32,0.10), rgba(90,62,32,0.10));
-	  pointer-events:none;
-	}
-
-	/* Panels go translucent and a bit softer */
-	.panel{
-	  background: var(--panel);
-	  backdrop-filter: blur(2px);
-	  -webkit-backdrop-filter: blur(2px);
-	  border: 1px solid rgba(255,255,255,0.05);
-	  box-shadow: 0 10px 32px rgba(0,0,0,.35);
-	}
-
-	/* Typography + buttons harmonize with the theme */
-	body{ color: var(--text); }
-	label{ color: var(--muted); }
-	button.primary{ background: var(--acc); color: #2B1B12; }
-	button.ghost{ background: rgba(255,255,255,0.06); color: var(--text); }
-	button.danger{ background: var(--danger); color: #1a0e0e; }
-
-	/* Inputs: darker glassy look */
-	input[type=number], input[type=text], select{
-	  background: rgba(0,0,0,0.35);
-	  border: 1px solid rgba(255,255,255,0.08);
-	  color: var(--text);
-	}
-	input[type=range]{
-	  accent-color: var(--acc);
-	}
-
-	/* Progress + ring pick up the new accents */
-	.bar{ background: var(--acc2); }
-	.ring svg #ringArc{ stroke: var(--acc); }
-
-	/* Optional: small text-shadow to lift text from the image */
-	.kvs, header, footer, .live{
-	  text-shadow: 0 1px 2px rgba(0,0,0,0.45);
-	}
-
-	/* Mobile: keep Start full-width; push help text below */
-	@media (max-width: 720px){
-	  .btns{ flex-direction: column; align-items: stretch; gap: 10px; }
-	  .btns .inline{ width:100%; }
-	  #start{ width:100%; padding-top:17px; padding-bottom:17px; }
-	  .btns .controls-row button{ flex:1; }
-	  .btns small{ align-self:center; }
-	}
-
-	/* === Warm leather/sepia accents; kill the blue === */
-	:root{
-	  --bg: rgba(24, 19, 14, 0.65);
-	  --panel: rgba(30, 24, 18, 0.78);
-	  --text: #F2E8D5;
-	  --muted: #D4C9B2;
-
-	  /* Accents tuned away from blue/green */
-	  --acc:  #B37A3E;   /* saddle leather: ring + primary button */
-	  --acc2: #C79E63;   /* brass/gold: progress bar */
-	  --danger: #B24A3A; /* brick red */
-	}
-
-	/* Inputs pick up the warm accent */
-	input[type=range]{ accent-color: var(--acc); }
-
-	/* Progress + ring now use the warm tones */
-	.bar{ background: var(--acc2) !important; }
-	.ring svg #ringArc{ stroke: var(--acc) !important; }
-
-	/* Full-bleed cowboy background with focal-point shifts */
-	body::before{
-	  content:"";
-	  position:fixed; inset:0; z-index:-2;
-	  background: url("ginger_cowboy.png") center / cover no-repeat;
-	  /* gentle warmth + lift */
-	  filter: saturate(0.95) contrast(0.95) brightness(0.84);
-	}
-
-	/* Contrast overlay for readability */
-	body::after{
-	  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
-	  background:
-		radial-gradient(120% 80% at 50% 15%, rgba(0,0,0,0.15), rgba(0,0,0,0.55)),
-		linear-gradient(0deg, rgba(90,62,32,0.10), rgba(90,62,32,0.10));
-	}
-
-	/* On wide screens, slide the background so the cowboy sits beside the content */
-	@media (min-width: 1200px){
-	  /* nudge image so more of the right side (face + gun) is visible */
-	  body::before{ background-position: 62% 30%; } /* try 58–70% to taste */
-	}
-
-	/* On ultra-wide monitors, push a bit further */
-	@media (min-width: 1600px){
-	  body::before{ background-position: 68% 70%; }
-	}
-
-	/* On phones/tablets, stay centered (portrait works well there) */
-	@media (max-width: 899px){
-	  body::before{ background-position: 50% 50%; }
-	}
-
+    @media (min-width:721px){.btns > #start, .btns .controls-row{ flex:1 1 0; }.btns .controls-row{ display:flex; }.btns .controls-row button{ width:100%; }#start{ padding-left:24px; }.btns small{ padding-right:8px; }}
+    @media (max-width:720px){.grid.cols{grid-template-columns:1fr}.btns{flex-direction:column;align-items:stretch;gap:10px}.btns .inline{width:100%}#start{width:100%;padding-top:17px;padding-bottom:17px}.btns .controls-row button{flex:1}.btns small{align-self:center}}
+    :root{--bg: rgba(24, 19, 14, 0.65);--panel: rgba(30, 24, 18, 0.78);--text: #F2E8D5;--muted: #D4C9B2;--acc: #B37A3E;--acc2: #C79E63;--danger: #B24A3A}
+    body::before{content:"";position:fixed;inset:0;background:url("ginger_cowboy.png") center/cover no-repeat fixed;z-index:-2;filter:saturate(0.95) contrast(0.95) brightness(0.84)}
+    body::after{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(120% 80% at 50% 15%, rgba(0,0,0,0.15), rgba(0,0,0,0.55)),linear-gradient(0deg, rgba(90,62,32,0.10), rgba(90,62,32,0.10));pointer-events:none}
+    .panel{background:var(--panel);backdrop-filter: blur(2px);-webkit-backdrop-filter: blur(2px);border:1px solid rgba(255,255,255,0.05);box-shadow:0 10px 32px rgba(0,0,0,.35)}
+    button.primary{ background: var(--acc); color: #2B1B12; }
+    button.ghost{ background: rgba(255,255,255,0.06); color: var(--text); }
+    button.danger{ background: var(--danger); color: #1a0e0e; }
+    input[type=number], input[type=text], select{background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.08);color:var(--text)}
+    input[type=range]{accent-color:var(--acc)}
+    .bar{ background: var(--acc2) }
+    .ring svg #ringArc{ stroke: var(--acc) }
+    .kvs, header, footer, .live{ text-shadow: 0 1px 2px rgba(0,0,0,0.45) }
+    @media (min-width: 1200px){ body::before{ background-position: 62% 30% } }
+    @media (min-width: 1600px){ body::before{ background-position: 68% 70% } }
+    @media (max-width: 899px){ body::before{ background-position: 50% 50% } }
+    /* Mic monitor styling */
+    .mic-log{max-height:160px;overflow:auto;background:rgba(0,0,0,0.25);border-radius:10px;padding:8px;border:1px solid rgba(255,255,255,0.06);font-variant-numeric:tabular-nums}
   </style>
+  <meta name="description" content="Timer with microphone-based shot detection for reaction time." />
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Training Timer</h1>
+      <h1>Training Timer + Mic</h1>
       <div class="presets">
         <div class="preset-actions">
           <button id="savePreset" class="ghost" title="Save current settings as preset">Save Preset</button>
@@ -243,98 +77,60 @@
       </div>
     </header>
 
-	<!-- Timer configuration (now always visible and at top) -->
-	<section class="panel">
-	  <h2 style="margin:0 0 8px 0; font-size:16px; color:var(--muted);">Timer configuration</h2>
-		<div class="grid cols" style="margin-top:10px">
-		  <div class="grid">
-			<div>
-			  <label>Shots per string</label>
-			  <div class="row">
-				<input id="shots" type="range" min="1" max="10" step="1" />
-				<input id="shotsN" type="number" min="1" max="10" />
-			  </div>
-			</div>
-
-			<div>
-			  <label>Split time (s)</label>
-			  <div class="row">
-				<input id="split" type="range" min="0.10" max="2.00" step="0.01" />
-				<input id="splitN" type="number" min="0.10" max="10" step="0.01" inputmode="decimal" />
-			  </div>
-			</div>
-
-			<div>
-			  <label>First shot time (s) <span class="muted">(draw → first shot)</span></label>
-			  <div class="row">
-				<input id="first" type="range" min="0.10" max="3.00" step="0.05" />
-				<input id="firstN" type="number" min="0.10" max="3.00" step="0.01" inputmode="decimal" />
-			  </div>
-              <div class="inline muted" style="margin-top:6px">
-                <input id="randomStart" type="checkbox" />
-                <span>Random Start (s):</span>
-                <label class="inline" style="gap:6px">min <input id="randMin" type="number" min="0.00" max="10" step="0.01" inputmode="decimal" style="width:86px"/></label>
-                <label class="inline" style="gap:6px">max <input id="randMax" type="number" min="0.00" max="10" step="0.01" inputmode="decimal" style="width:86px"/></label>
-              </div>
+    <section class="panel">
+      <h2 style="margin:0 0 8px 0; font-size:16px; color:var(--muted);">Timer configuration</h2>
+      <div class="grid cols" style="margin-top:10px">
+        <div class="grid">
+          <div>
+            <label>Shots per string</label>
+            <div class="row">
+              <input id="shots" type="range" min="1" max="10" step="1" />
+              <input id="shotsN" type="number" min="1" max="10" />
             </div>
-
-            <div>
-              <label>Reloads</label>
-              <div class="row">
-                <input id="reloads" type="range" min="0" max="3" step="1" />
-                <input id="reloadsN" type="number" min="0" max="3" />
-              </div>
+          </div>
+          <div>
+            <label>Split time (s)</label>
+            <div class="row">
+              <input id="split" type="range" min="0.10" max="2.00" step="0.01" />
+              <input id="splitN" type="number" min="0.10" max="10" step="0.01" inputmode="decimal" />
             </div>
-
-			<div>
-			  <label>Reload time (s)</label>
-			  <div class="row">
-				<input id="reloadTime" type="range" min="0.10" max="3.00" step="0.05" />
-				<input id="reloadTimeN" type="number" min="0.10" max="3.00" step="0.01" inputmode="decimal" />
-			  </div>
-			</div>
-
-			<div>
-			  <label>Cues</label>
-			  <div class="inline">
-				<!-- Voice removed -->
-				<label class="inline"><input id="hapticsOn" type="checkbox"/> Haptics</label>
-			  </div>
-			</div>
-		  </div>
-		</div>
-	</section>
-
-	<!-- Display (now collapsible and below config) -->
-	<section class="panel">
-	  <details>
-		<summary>Display & status</summary>
-		<div class="grid" style="margin-top:10px">
-		  <div class="ring">
-			<svg id="ring" width="180" height="180" viewBox="0 0 120 120">
-			  <!-- <circle cx="60" cy="60" r="54" fill="none" stroke="#1f2937" stroke-width="12"/> --!>
-			  <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(179,122,62,0.35)" stroke-width="12"/>
-			  <circle id="ringArc" cx="60" cy="60" r="54" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292"/>
-			</svg>
-		  </div>
-
-		  <div class="kvs">
-			<div><b>Status</b><div id="status" class="live">Idle</div></div>
-			<div><b>Next cue</b><div id="nextCue" class="live muted">—</div></div>
-			<div><b>Elapsed</b><div id="elapsed" class="live">0.00 s</div></div>
-			<div><b>Total plan</b><div id="planLen" class="live">0.00 s</div></div>
-		  </div>
-
-		  <div class="progress"><div id="bar" class="bar"></div></div>
-
-		  <div class="inline">
-			<button id="testBeep" class="ghost">Test beep</button>
-			<button id="clear" class="ghost">Reset</button>
-		  </div>
-		</div>
-	  </details>
-	</section>
-
+          </div>
+          <div>
+            <label>First shot time (s) <span class="muted">(draw → first shot)</span></label>
+            <div class="row">
+              <input id="first" type="range" min="0.10" max="3.00" step="0.05" />
+              <input id="firstN" type="number" min="0.10" max="3.00" step="0.01" inputmode="decimal" />
+            </div>
+            <div class="inline muted" style="margin-top:6px">
+              <input id="randomStart" type="checkbox" />
+              <span>Random Start (s):</span>
+              <label class="inline" style="gap:6px">min <input id="randMin" type="number" min="0.00" max="10" step="0.01" inputmode="decimal" style="width:86px"/></label>
+              <label class="inline" style="gap:6px">max <input id="randMax" type="number" min="0.00" max="10" step="0.01" inputmode="decimal" style="width:86px"/></label>
+            </div>
+          </div>
+          <div>
+            <label>Reloads</label>
+            <div class="row">
+              <input id="reloads" type="range" min="0" max="3" step="1" />
+              <input id="reloadsN" type="number" min="0" max="3" />
+            </div>
+          </div>
+          <div>
+            <label>Reload time (s)</label>
+            <div class="row">
+              <input id="reloadTime" type="range" min="0.10" max="3.00" step="0.05" />
+              <input id="reloadTimeN" type="number" min="0.10" max="3.00" step="0.01" inputmode="decimal" />
+            </div>
+          </div>
+          <div>
+            <label>Cues</label>
+            <div class="inline">
+              <label class="inline"><input id="hapticsOn" type="checkbox"/> Haptics</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="panel btns">
       <button id="start" class="primary">Start</button>
@@ -342,6 +138,57 @@
         <button id="stop" class="danger">Stop</button>
       </div>
       <small class="muted">Space: Start/Stop</small>
+    </section>
+
+    <section class="panel">
+      <details>
+        <summary>Display & status</summary>
+        <div class="grid" style="margin-top:10px">
+          <div class="ring">
+            <svg id="ring" width="180" height="180" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(179,122,62,0.35)" stroke-width="12"/>
+              <circle id="ringArc" cx="60" cy="60" r="54" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292"/>
+            </svg>
+          </div>
+          <div class="kvs">
+            <div><b>Status</b><div id="status" class="live">Idle</div></div>
+            <div><b>Next cue</b><div id="nextCue" class="live muted">—</div></div>
+            <div><b>Elapsed</b><div id="elapsed" class="live">0.00 s</div></div>
+            <div><b>Total plan</b><div id="planLen" class="live">0.00 s</div></div>
+          </div>
+          <div class="progress"><div id="bar" class="bar"></div></div>
+          <div class="inline">
+            <button id="testBeep" class="ghost">Test beep</button>
+            <button id="clear" class="ghost">Reset</button>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel">
+      <details>
+        <summary>Mic monitor</summary>
+        <div class="grid" style="margin-top:10px">
+          <div class="inline">
+            <button id="enableMic" class="ghost">Enable microphone</button>
+            <label class="inline"><input id="micOn" type="checkbox" checked /> Mic detection enabled</label>
+            <label class="inline"><input id="micRefInitial" type="checkbox" /> Reference initial draw beep</label>
+            <label class="inline"><span class="muted">Threshold</span><input id="micThreshold" type="range" min="0.005" max="0.08" step="0.001" style="width:200px" /></label>
+          </div>
+          <div class="kvs">
+            <div><b>Mic status</b><div id="micStatus" class="live muted">Off</div></div>
+            <div><b>Last reaction</b><div id="micLast" class="live muted">—</div></div>
+          </div>
+          <div>
+            <label>Detections</label>
+            <div id="micLog" class="mic-log"></div>
+            <div class="inline" style="margin-top:8px">
+              <button id="micClear" class="ghost">Clear log</button>
+              <button id="micExport" class="ghost">Export CSV</button>
+            </div>
+          </div>
+        </div>
+      </details>
     </section>
 
     <section class="panel">
@@ -383,8 +230,6 @@
       <summary>Self‑tests (dev)</summary>
       <pre id="tests" style="white-space:pre-wrap"></pre>
     </details>
-
-    
   </div>
 
   <script>
@@ -405,49 +250,30 @@
       freq: $('freq'), len: $('len'), freq0: $('freq0'), len0: $('len0'),
       summary: $('summary'), copySummary: $('copySummary'), exportCsv: $('exportCsv'),
       presetSelect: $('presetSelect'), savePreset: $('savePreset'), deletePreset: $('deletePreset'),
-      tests: $('tests')
+      tests: $('tests'),
+      // mic UI
+      enableMic: $('enableMic'), micStatus: $('micStatus'), micLast: $('micLast'), micLog: $('micLog'), micClear: $('micClear'), micExport: $('micExport'), micRefInitial: $('micRefInitial'), micThreshold: $('micThreshold'), micOn: $('micOn')
     };
 
-    // Match preset selector width to combined Save/Delete buttons
+    // Match preset selector width
     var presetActionsEl = null;
-    function syncPresetWidth(){
-      try{
-        if(!presetActionsEl){ presetActionsEl = document.querySelector('.preset-actions'); }
-        if(presetActionsEl && els.presetSelect){
-          var w = presetActionsEl.offsetWidth;
-          els.presetSelect.style.width = w + 'px';
-          els.presetSelect.style.maxWidth = '100%';
-        }
-      }catch(e){}
-    }
-    window.syncPresetWidth = syncPresetWidth;
+    function syncPresetWidth(){ try{ if(!presetActionsEl){ presetActionsEl = document.querySelector('.preset-actions'); } if(presetActionsEl && els.presetSelect){ var w = presetActionsEl.offsetWidth; els.presetSelect.style.width = w + 'px'; els.presetSelect.style.maxWidth = '100%'; } }catch(e){} }
     window.addEventListener('resize', syncPresetWidth);
 
     // Pair range+number controls
     function bindPair(range, number, key, onChange){
       var r = els[range], n = els[number];
       function apply(v){ v = +v; r.value = v; n.value = v; if(onChange) onChange(v); }
-      // Slider updates immediately
       r.addEventListener('input', function(e){ apply(e.target.value); });
-      // Number field: only commit on blur or Enter to avoid clobbering mid-typing
-      n.addEventListener('change', function(e){
-        var v = parseFloat(e.target.value);
-        if(!isNaN(v)) apply(v);
-      });
-      n.addEventListener('keydown', function(e){
-        if(e.key === 'Enter'){
-          var v = parseFloat(n.value);
-          if(!isNaN(v)) apply(v);
-        }
-      });
-      var saved = load()[key];
-      if(saved!=null) apply(saved); else apply(r.value);
+      n.addEventListener('change', function(e){ var v = parseFloat(e.target.value); if(!isNaN(v)) apply(v); });
+      n.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var v = parseFloat(n.value); if(!isNaN(v)) apply(v); }});
+      var saved = load()[key]; if(saved!=null) apply(saved); else apply(r.value);
     }
 
     // Load/save localStorage
-    var LSKEY = 'ttimer_v2';
+    var LSKEY = 'ttimer_v2_mic';
     function load(){ try{ return JSON.parse(localStorage.getItem(LSKEY))||{} }catch(e){ return {} } }
-    function save(patch){ var cur = load(); localStorage.setItem(LSKEY, JSON.stringify(Object.assign({}, cur, patch))); }
+    function save(p){ var cur = load(); localStorage.setItem(LSKEY, JSON.stringify(Object.assign({}, cur, p))); }
 
     // Defaults & bindings
     bindPair('shots','shotsN','shots', function(v){ save({shots:v}); });
@@ -456,7 +282,7 @@
     bindPair('reloads','reloadsN','reloads', function(v){ save({reloads:v}); });
     bindPair('reloadTime','reloadTimeN','reloadTime', function(v){ save({reloadTime:v}); });
 
-    // Other controls
+    // Other controls defaults
     var st = load();
     els.randomStart.checked = (st.randomStart != null ? !!st.randomStart : true);
     els.randMin.value = (st.randMin != null ? st.randMin : 2.00);
@@ -465,69 +291,45 @@
     els.len.value = (st.len != null ? st.len : 0.15);
     els.freq0.value = (st.freq0 != null ? st.freq0 : 800);
     els.len0.value = (st.len0 != null ? st.len0 : 0.25);
+    els.micRefInitial.checked = (st.micRefInitial != null ? !!st.micRefInitial : false);
+    els.micThreshold.value = (st.micThreshold != null ? st.micThreshold : 0.02);
+    if(els.micOn) els.micOn.checked = (st.micOn != null ? !!st.micOn : true);
 
-    [els.randomStart, els.randMin, els.randMax, els.freq, els.len, els.freq0, els.len0].forEach(function(el){
+    [els.randomStart, els.randMin, els.randMax, els.freq, els.len, els.freq0, els.len0, els.micRefInitial, els.micThreshold, els.micOn].forEach(function(el){
+      if(!el) return;
       el.addEventListener('input', function(){
         save({
           randomStart: els.randomStart.checked,
           randMin: +els.randMin.value, randMax: +els.randMax.value,
-          freq:+els.freq.value, len:+els.len.value, freq0:+els.freq0.value, len0:+els.len0.value
+          freq:+els.freq.value, len:+els.len.value, freq0:+els.freq0.value, len0:+els.len0.value,
+          micRefInitial: !!els.micRefInitial.checked,
+          micThreshold: +els.micThreshold.value,
+          micOn: !!(els.micOn && els.micOn.checked)
         });
       });
     });
 
     // Presets (local only)
-    var PSKEY = 'ttimer_v2_presets';
+    var PSKEY = 'ttimer_v2_mic_presets';
     function loadPresets(){ try{ return JSON.parse(localStorage.getItem(PSKEY))||{} }catch(e){ return {} } }
     function savePresets(obj){ localStorage.setItem(PSKEY, JSON.stringify(obj)); }
-
-    function fillPresetSelect(){
-      var ps = loadPresets();
-      var opts = '<option value="">Load preset…</option>';
-      Object.keys(ps).forEach(function(k){
-        opts += '<option value="'+k+'">'+k+'</option>';
-      });
-      els.presetSelect.innerHTML = opts;
-      if(window.syncPresetWidth) window.syncPresetWidth();
-    }
+    function fillPresetSelect(){ var ps = loadPresets(); var opts = '<option value="">Load preset…</option>'; Object.keys(ps).forEach(function(k){ opts += '<option value="'+k+'">'+k+'</option>'; }); els.presetSelect.innerHTML = opts; syncPresetWidth(); }
     fillPresetSelect();
-
-    els.savePreset.addEventListener('click', function(){
-      var name = prompt('Preset name?'); if(!name) return;
-      var preset = currentSettings();
-      var ps = loadPresets(); ps[name]=preset; savePresets(ps); fillPresetSelect();
-    });
-    els.deletePreset.addEventListener('click', function(){
-      var name = els.presetSelect && els.presetSelect.value;
-      if(!name){ alert('Select a preset to delete.'); return; }
-      if(!confirm('Delete preset "'+name+'"?')) return;
-      var ps = loadPresets();
-      if(ps && ps[name]){ delete ps[name]; savePresets(ps); fillPresetSelect(); }
-      if(els.presetSelect) els.presetSelect.value = '';
-    });
-    els.presetSelect.addEventListener('change', function(e){
-      var name = e.target.value; if(!name) return;
-      var p = loadPresets()[name]; if(!p) return;
-      applySettings(p);
-    });
+    els.savePreset.addEventListener('click', function(){ var name = prompt('Preset name?'); if(!name) return; var preset = currentSettings(); var ps = loadPresets(); ps[name]=preset; savePresets(ps); fillPresetSelect(); });
+    els.deletePreset.addEventListener('click', function(){ var name = els.presetSelect && els.presetSelect.value; if(!name){ alert('Select a preset to delete.'); return; } if(!confirm('Delete preset "'+name+'"?')) return; var ps = loadPresets(); if(ps && ps[name]){ delete ps[name]; savePresets(ps); fillPresetSelect(); } if(els.presetSelect) els.presetSelect.value=''; });
+    els.presetSelect.addEventListener('change', function(e){ var name=e.target.value; if(!name) return; var p=loadPresets()[name]; if(!p) return; applySettings(p); });
 
     function applySettings(p){
-      function set(id,val){
-        var control = els[id];
-        if(control && (control.type==='range' || control.type==='number')){
-          control.value = val;
-          var twinId = id.slice(-1)==='N' ? id.slice(0,-1) : id + 'N';
-          var twin = els[twinId];
-          if(twin) twin.value = val;
-        }
-      }
+      function set(id, val){ var el = els[id]; if(el){ el.value = val; var twinId = (id.endsWith('N')?id.slice(0,-1):id+'N'); var twin = els[twinId]; if(twin) twin.value = val; } }
       set('shots', +p.shots); set('split', +p.split); set('first', +p.first);
       set('reloads', +p.reloads); set('reloadTime', +p.reloadTime);
       els.randomStart.checked = !!p.randomStart; els.randMin.value = (p.randMin != null ? p.randMin : 0.0); els.randMax.value = (p.randMax != null ? p.randMax : 2.5);
       els.freq.value = (p.freq != null ? p.freq : 1000); els.len.value = (p.len != null ? p.len : 0.15);
       els.freq0.value = (p.freq0 != null ? p.freq0 : 800); els.len0.value = (p.len0 != null ? p.len0 : 0.25);
-      save(p);
-      updatePlanStats();
+      els.micRefInitial.checked = (p.micRefInitial != null ? !!p.micRefInitial : false);
+      els.micThreshold.value = (p.micThreshold != null ? p.micThreshold : 0.02);
+      if(els.micOn) els.micOn.checked = (p.micOn != null ? !!p.micOn : true);
+      save(p); updatePlanStats();
     }
 
     function currentSettings(){
@@ -536,247 +338,211 @@
         reloads:+els.reloads.value, reloadTime:+els.reloadTime.value,
         randomStart:els.randomStart.checked, randMin:+els.randMin.value, randMax:+els.randMax.value,
         hapticsOn:els.hapticsOn.checked,
-        freq:+els.freq.value, len:+els.len.value, freq0:+els.freq0.value, len0:+els.len0.value
+        freq:+els.freq.value, len:+els.len.value, freq0:+els.freq0.value, len0:+els.len0.value,
+        micRefInitial: !!els.micRefInitial.checked, micThreshold: +els.micThreshold.value, micOn: !!(els.micOn && els.micOn.checked)
       };
     }
 
     // ===== Audio engine =====
     var audioCtx = null; var wakeLock = null; var startedOnce=false; var runStart=0;
-var activeSources = []; var timers = [];
-    async function ensureAudio(){
-      if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
-      if(audioCtx.state !== 'running'){
-        try{ await audioCtx.resume(); }catch(e){}
-      }
-      try{
-        var b = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
-        var src = audioCtx.createBufferSource(); src.buffer = b; src.connect(audioCtx.destination); src.start(0);
-        activeSources.push(src);
-      }catch(e){}
-      startedOnce = true; return audioCtx;
-    }
-    function requestWakeLock(){
-      try{ if('wakeLock' in navigator){ navigator.wakeLock.request('screen').then(function(lock){ wakeLock = lock; wakeLock.addEventListener('release',function(){wakeLock=null;}); }); } }catch(e){}
-    }
-
-    function beep(at, freq, len){
-      if(!audioCtx) return;
-      var o = audioCtx.createOscillator();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(freq, at);
-      o.connect(audioCtx.destination);
-      try{ o.start(at); o.stop(at+len); }catch(e){}
-      activeSources.push(o);
-    }
-
-    // Micro pre-roll click to 'wake' the output just before the draw beep
-    function primeAudio(at){ /* disabled: no pre-roll shaping for pure sine profile */ }
-
-
+    var activeSources = []; var timers = [];
+    async function ensureAudio(){ if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } if(audioCtx.state!=='running'){ try{ await audioCtx.resume(); }catch(e){} } try{ var b=audioCtx.createBuffer(1,1,audioCtx.sampleRate); var src=audioCtx.createBufferSource(); src.buffer=b; src.connect(audioCtx.destination); src.start(0); activeSources.push(src);}catch(e){} startedOnce=true; return audioCtx; }
+    function requestWakeLock(){ try{ if('wakeLock' in navigator){ navigator.wakeLock.request('screen').then(function(lock){ wakeLock=lock; wakeLock.addEventListener('release',function(){wakeLock=null;}); }); } }catch(e){} }
+    function beep(at, freq, len){ if(!audioCtx) return; var o=audioCtx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(freq, at); o.connect(audioCtx.destination); try{ o.start(at); o.stop(at+len); }catch(e){} activeSources.push(o); onBeepScheduled(at); }
     function haptic(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
-    function cancelAllAudio(){
-      var now = audioCtx ? audioCtx.currentTime : 0;
-      try{
-        activeSources.forEach(function(src){
-          try{ if(src.stop) src.stop(now); }catch(e){}
-          try{ if(src.disconnect) src.disconnect(); }catch(e){}
-        });
-      }catch(e){}
-      activeSources = [];
-      try{ timers.forEach(function(id){ clearTimeout(id); }); }catch(e){};
-      timers = [];
-    }
+    function cancelAllAudio(){ var now = audioCtx ? audioCtx.currentTime : 0; try{ activeSources.forEach(function(src){ try{ if(src.stop) src.stop(now);}catch(e){} try{ if(src.disconnect) src.disconnect(); }catch(e){} }); }catch(e){} activeSources=[]; try{ timers.forEach(function(id){ clearTimeout(id); }); }catch(e){}; timers=[]; }
 
     // ===== Timeline planner =====
     function buildTimeline(cfg){
       var events = [];
       var shotsPerString = Math.max(0, Math.floor(cfg.shots));
       var strings = Math.max(1, Math.floor(cfg.reloads) + 1);
-
       var drawDelay = cfg.randomStart ? randUniform(cfg.randMin, cfg.randMax) : 0;
-      var t = 0;
-      events.push({ t: t, type:'ready' });
-      t += drawDelay;
-      events.push({ t: t, type:'draw' });
-
-      t += cfg.first;
-
-      var shotIndex = 1;
+      var t = 0; events.push({ t: t, type:'ready' }); t += drawDelay; events.push({ t: t, type:'draw' });
+      t += cfg.first; var shotIndex=1;
       for(var seg=0; seg<strings; seg++){
-        for(var i=0; i<shotsPerString; i++){
-          events.push({ t: t, type:'shot', n: shotIndex });
-          shotIndex++;
-          var isLastShotInString = (i === shotsPerString-1);
-          var isLastString = (seg === strings-1);
+        for(var i=0;i<shotsPerString;i++){
+          events.push({ t:t, type:'shot', n:shotIndex }); shotIndex++;
+          var isLastShotInString = (i===shotsPerString-1);
+          var isLastString = (seg===strings-1);
           if(!(isLastString && isLastShotInString)){
-            if(isLastShotInString){
-              // reload gap only
-              t += cfg.reloadTime;
-              events.push({ t: t, type:'reload' });
-            } else {
-              t += cfg.split;
-            }
+            if(isLastShotInString){ t += cfg.reloadTime; events.push({ t:t, type:'reload' }); }
+            else { t += cfg.split; }
           }
         }
       }
-
-      events.push({ t: t, type:'end' });
+      events.push({ t:t, type:'end' });
       return { events: events, total: t };
     }
-
-    function randUniform(a,b){ if(b<a){ var tmp=a; a=b; b=tmp; } return a + Math.random()*(b-a); }
+    function randUniform(a,b){ if(b<a){ var tmp=a;a=b;b=tmp;} return a + Math.random()*(b-a); }
 
     // ===== Runner =====
     var current = null; var schedule = [];
-
     async function start(){
-      await ensureAudio(); requestWakeLock();
-      if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
-      var cfg = currentSettings();
-      var out = buildTimeline(cfg);
+      await ensureAudio(); requestWakeLock(); await initMicIfNeeded();
+      if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') window.speechSynthesis.cancel();
+      var cfg = currentSettings(); var out = buildTimeline(cfg);
       var events = out.events; var total = out.total;
       current = {cfg:cfg, events:events, total:total, i:0}; schedule.length=0;
       var SAFETY_OFFSET = 0.12; runStart = audioCtx.currentTime + SAFETY_OFFSET;
-      // Pre-roll click disabled for pure sine profile
-    
-      els.start.disabled = true;
-      try{ els.start.classList.add('running'); }catch(e){}
-
-      renderSummary(events);
-      els.planLen.textContent = total.toFixed(2)+' s';
+      els.start.disabled = true; try{ els.start.classList.add('running'); }catch(e){}
+      renderSummary(events); els.planLen.textContent = total.toFixed(2)+' s';
       status('Armed');
 
+      // Clear mic state for new run
+      resetMicRunState();
+
+      var lastBeepAt = runStart;
       events.forEach(function(ev, idx){
-        var at = runStart + ev.t;
-        var shouldBeep = false;
-        if(ev.type === 'draw'){
-          shouldBeep = true;
-          if(shouldBeep) beep(at, cfg.freq0, cfg.len0);
-        } else if(ev.type === 'shot'){
-          shouldBeep = true;
-          if(shouldBeep) beep(at, cfg.freq, cfg.len);
-        } else if(ev.type === 'reload'){
-          // Avoid double-beep: skip reload beep if a shot is scheduled at the exact same time
-          var shotAtSameTime = false;
-          for(var j=0;j<events.length;j++){
-            if(j!==idx && events[j].t === ev.t && events[j].type === 'shot'){ shotAtSameTime = true; break; }
-          }
-          if(!shotAtSameTime){
-            beep(at, cfg.freq, cfg.len);
-          }
+        var at = runStart + ev.t; var beeped=false;
+        if(ev.type==='draw'){ beep(at, cfg.freq0, cfg.len0); beeped=true; }
+        else if(ev.type==='shot'){ beep(at, cfg.freq, cfg.len); beeped=true; }
+        else if(ev.type==='reload'){
+          // Skip double-beep if overlapping with shot at same time
+          var shotSame=false; for(var j=0;j<events.length;j++){ if(j!==idx && events[j].t===ev.t && events[j].type==='shot'){ shotSame=true; break; } }
+          if(!shotSame){ beep(at, cfg.freq, cfg.len); beeped=true; }
         }
         schedule.push({at:at, ev:ev});
+        if(beeped && at > lastBeepAt) lastBeepAt = at;
       });
 
       tick();
+      // Arm mic detection during run window and auto-disarm 2s after last beep
+      mic.armed = true; if(els.micStatus) els.micStatus.textContent = 'On (armed)';
+      var disarmMs = Math.max(0, (lastBeepAt + 2 - audioCtx.currentTime) * 1000);
+      timers.push(setTimeout(function(){ mic.armed = false; if(els.micStatus) els.micStatus.textContent = 'On (idle)'; }, disarmMs));
       if(cfg.hapticsOn){
         var first = events.find(function(e){ return e.type==='draw'; });
         if(first){ timers.push(setTimeout(function(){ haptic(50); }, first.t*1000)); }
-        events.filter(function(e){return e.type==='reload';}).forEach(function(r){
-          timers.push(setTimeout(function(){ haptic(30); }, r.t*1000));
-        });
+        events.filter(function(e){return e.type==='reload';}).forEach(function(r){ timers.push(setTimeout(function(){ haptic(30); }, r.t*1000)); });
       }
     }
-
-    /* pause/resume removed */
-    function stop(){ cancelAllAudio(); current=null; schedule.length=0; status('Idle'); updatePlanStats(true); if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel(); setRing(0); setBar(0); els.nextCue.textContent='—'; els.elapsed.textContent='0.00 s'; els.start.disabled = false; try{ els.start.classList.remove('running'); }catch(e){} }
-
+    function stop(){ cancelAllAudio(); current=null; schedule.length=0; mic.armed=false; if(els.micStatus) els.micStatus.textContent = mic.running ? 'On (idle)' : 'Off'; status('Idle'); updatePlanStats(true); if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') window.speechSynthesis.cancel(); setRing(0); setBar(0); els.nextCue.textContent='—'; els.elapsed.textContent='0.00 s'; els.start.disabled=false; try{ els.start.classList.remove('running'); }catch(e){} }
     function status(txt){ els.status.textContent = txt; }
-
-    function tick(){
-      if(!current) return;
-      var now = audioCtx.currentTime;
-      while(schedule.length && schedule[0].at <= now + 0.01){
-        var ev = schedule.shift().ev;
-        if(ev.type==='draw') status('Running');
-        if(ev.type==='shot') els.nextCue.textContent = 'Shot ' + (ev.n+1 || '');
-        if(ev.type==='reload') els.nextCue.textContent = 'Reload';
-        if(ev.type==='end'){ status('Done'); setRing(0); setBar(1); els.start.disabled = false; try{ els.start.classList.remove('running'); }catch(e){}; return; }
-      }
-      var elapsed = now - runStart; els.elapsed.textContent = elapsed.toFixed(2)+ ' s';
-      setBar(Math.min(1, elapsed / current.total));
-      var firstDraw = null;
-      for(var k=0;k<current.events.length;k++){ if(current.events[k].type==='draw'){ firstDraw=current.events[k]; break; } }
-      var firstAt = runStart + (firstDraw ? firstDraw.t : 0);
-      var remaining = Math.max(0, firstAt - now);
-      var startDelay = (firstDraw ? firstDraw.t : 1);
-      setRing( startDelay<=0 ? 0 : 1 - (remaining/startDelay) );
-      if(current) requestAnimationFrame(tick);
-    }
-
-    function setBar(frac){ els.bar.style.width = (frac*100).toFixed(1)+'%'; }
+    function tick(){ if(!current) return; var now=audioCtx.currentTime; while(schedule.length && schedule[0].at <= now + 0.01){ var ev=schedule.shift().ev; if(ev.type==='draw') status('Running'); if(ev.type==='shot') els.nextCue.textContent = 'Shot ' + (ev.n+1 || ''); if(ev.type==='reload') els.nextCue.textContent = 'Reload'; if(ev.type==='end'){ status('Done'); setRing(0); setBar(1); els.start.disabled=false; try{ els.start.classList.remove('running'); }catch(e){}; return; } } var elapsed = now - runStart; els.elapsed.textContent = elapsed.toFixed(2)+ ' s'; setBar(Math.min(1, elapsed / current.total)); var firstDraw=null; for(var k=0;k<current.events.length;k++){ if(current.events[k].type==='draw'){ firstDraw=current.events[k]; break; } } var firstAt = runStart + (firstDraw ? firstDraw.t : 0); var remaining = Math.max(0, firstAt - now); var startDelay = (firstDraw ? firstDraw.t : 1); setRing( startDelay<=0 ? 0 : 1 - (remaining/startDelay) ); if(current) requestAnimationFrame(tick); }
+    function setBar(frac){ els.bar.style.width=(frac*100).toFixed(1)+'%'; }
     function setRing(frac){ var C = 2*Math.PI*54; var off = Math.max(0, C*(1-frac)); els.ringArc.style.strokeDashoffset = off.toFixed(2); }
-
-    function renderSummary(events){
-      var lines = ['#,label,time_s'];
-      var i=0; events.forEach(function(ev){ lines.push((i++)+','+ev.type+','+ev.t.toFixed(3)); });
-      els.summary.textContent = lines.join('\n');
-    }
+    function renderSummary(events){ var lines=['#,label,time_s']; var i=0; events.forEach(function(ev){ lines.push((i++)+','+ev.type+','+ev.t.toFixed(3)); }); els.summary.textContent = lines.join('\n'); }
 
     // Buttons
     els.start.addEventListener('click', function(){ start(); });
     els.stop.addEventListener('click', stop);
     els.testBeep.addEventListener('click', function(){ ensureAudio(); var now=audioCtx.currentTime; beep(now+0.05, +els.freq.value, +els.len.value); });
-    els.clear.addEventListener('click', function(){ applySettings({shots:6, split:0.25, first:0.75, reloads:0, reloadTime:1.2, randomStart:true, randMin:2.0, randMax:4.0, hapticsOn:false, freq:1000, len:0.15, freq0:800, len0:0.25}); stop(); });
+    els.clear.addEventListener('click', function(){ applySettings({shots:6, split:0.25, first:0.75, reloads:0, reloadTime:1.2, randomStart:true, randMin:2.0, randMax:4.0, hapticsOn:false, freq:1000, len:0.15, freq0:800, len0:0.25, micRefInitial:false, micThreshold:0.02, micOn:true}); stop(); });
 
     // Keyboard
-    window.addEventListener('keydown', function(e){
-      if(e.code==='Space'){
-        e.preventDefault();
-        if(!startedOnce) ensureAudio();
-        if(current) stop(); else start();
-      }
-      if(e.key==='s' || e.key==='S'){ stop(); }
-    });
+    window.addEventListener('keydown', function(e){ if(e.code==='Space'){ e.preventDefault(); if(!startedOnce) ensureAudio(); if(current) stop(); else start(); } if(e.key==='s' || e.key==='S'){ stop(); } });
 
     // Copy/export
-    els.copySummary.addEventListener('click', function(){ try{ navigator.clipboard.writeText(els.summary.textContent); els.copySummary.textContent='Copied!'; setTimeout(function(){ els.copySummary.textContent='Copy'; },1200);}catch(e){} });
-    els.exportCsv.addEventListener('click', function(){
-      var blob = new Blob([els.summary.textContent], {type:'text/csv'});
-      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'training_timer_session.csv';
-      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
-    });
+    els.copySummary && els.copySummary.addEventListener('click', function(){ try{ navigator.clipboard.writeText(els.summary.textContent); this.textContent='Copied!'; var self=this; setTimeout(function(){ self.textContent='Copy'; },1200);}catch(e){} });
+    els.exportCsv && els.exportCsv.addEventListener('click', function(){ var blob = new Blob([els.summary.textContent], {type:'text/csv'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='training_timer_session.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); });
 
-    function updatePlanStats(reset){
-      var out = buildTimeline(currentSettings());
-      els.planLen.textContent = out.total.toFixed(2)+' s';
-      if(reset){ els.summary.textContent=''; }
-    }
-    updatePlanStats();
-    // ensure preset select width syncs after layout
-    setTimeout(syncPresetWidth, 0);
-
-    // iOS autoplay fix — create AudioContext on first tap anywhere
+    function updatePlanStats(reset){ var out = buildTimeline(currentSettings()); els.planLen.textContent = out.total.toFixed(2)+' s'; if(reset){ els.summary.textContent=''; } }
+    updatePlanStats(); setTimeout(syncPresetWidth, 0);
     window.addEventListener('pointerdown', function(){ if(!audioCtx) ensureAudio(); }, {once:true});
+
+    // ===== Mic capture & detection =====
+    var mic = { stream:null, source:null, analyser:null, buf:null, running:false, armed:false };
+    var micDetections = []; // {beepTime, detectTime, delta, type, ref}
+    var lastDetectionAt = -1;
+    var MIN_GAP = 0.25;           // refractory period between detections (s)
+    var IGNORE_AFTER_BEEP = 0.0;  // using headphones: allow 0 ignore
+    var beepHistory = [];         // all beeps this run: {at, type}
+
+    function onBeepScheduled(at){
+      // Track all beeps with their labeled type
+      var ev = (current && current.events) ? current.events.find(function(e){ return (runStart + e.t) === at; }) : null;
+      var label = (ev && ev.type) ? ev.type : 'beep';
+      beepHistory.push({ at: at, type: label });
+    }
+
+    function resetMicRunState(){ micDetections = []; lastDetectionAt = -1; beepHistory = []; els.micLog.textContent=''; els.micLast.textContent='—'; }
+
+    function micLog(msg){ var el = els.micLog; if(!el) return; var line = document.createElement('div'); line.textContent = msg; el.appendChild(line); el.scrollTop = el.scrollHeight; }
+
+    async function initMicIfNeeded(){
+      if(mic.running) return;
+      try{
+        var stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: false, channelCount: 1 }, video: false });
+        await ensureAudio();
+        mic.stream = stream;
+        mic.source = audioCtx.createMediaStreamSource(stream);
+        mic.analyser = audioCtx.createAnalyser();
+        mic.analyser.fftSize = 2048; // time-domain window ~46ms at 44.1k
+        mic.source.connect(mic.analyser);
+        mic.buf = new Float32Array(mic.analyser.fftSize);
+        mic.running = true; els.micStatus.textContent = 'On (idle)'; els.enableMic.textContent='Mic enabled';
+        micLoop();
+      }catch(e){ els.micStatus.textContent = 'Permission denied'; micLog('Mic error: '+(e && e.message ? e.message : e)); }
+    }
+
+    function micLoop(){
+      if(!mic.running || !mic.analyser) return;
+      // Gate by user toggle and arming window
+      var enabled = (els.micOn ? !!els.micOn.checked : true) && mic.armed;
+      if(!enabled){ requestAnimationFrame(micLoop); return; }
+      mic.analyser.getFloatTimeDomainData(mic.buf);
+      // Compute simple RMS over buffer
+      var sum=0; for(var i=0;i<mic.buf.length;i++){ var v=mic.buf[i]; sum += v*v; }
+      var rms = Math.sqrt(sum / mic.buf.length);
+      var now = audioCtx.currentTime;
+      var thresh = +els.micThreshold.value || 0.02;
+
+      // Schmitt-like trigger: rising edge above threshold + refractory
+      if(rms > thresh && (lastDetectionAt<0 || (now - lastDetectionAt) > MIN_GAP)){
+        lastDetectionAt = now;
+        var usedBeep = null;
+        if(beepHistory.length){
+          if(els.micRefInitial && els.micRefInitial.checked){
+            // Prefer the first draw beep; fallback to the first beep
+            var draw = beepHistory.find(function(b){ return b.type==='draw'; });
+            usedBeep = draw || beepHistory[0];
+          } else {
+            // Nearest beep in time (before or after)
+            usedBeep = beepHistory[0];
+            var bestDist = Math.abs(now - usedBeep.at);
+            for(var i=1;i<beepHistory.length;i++){
+              var d = Math.abs(now - beepHistory[i].at);
+              if(d < bestDist){ bestDist = d; usedBeep = beepHistory[i]; }
+            }
+          }
+        }
+        if(usedBeep){
+          var delta = now - usedBeep.at; // signed
+          micDetections.push({ beepTime: usedBeep.at, detectTime: now, delta: delta, type: usedBeep.type, ref: (els.micRefInitial && els.micRefInitial.checked) ? 'initial' : 'nearest' });
+          els.micLast.textContent = (usedBeep.type+': '+(delta>=0?'+':'')+delta.toFixed(3)+' s' + ((els.micRefInitial && els.micRefInitial.checked)?' (initial)':' (nearest)'));
+          micLog((new Date()).toLocaleTimeString()+ ' — '+ usedBeep.type +' Δ '+ (delta>=0?'+':'') + delta.toFixed(3)+' s' + ((els.micRefInitial && els.micRefInitial.checked)?' (initial)':' (nearest)'));
+        } else {
+          micLog((new Date()).toLocaleTimeString()+ ' — detected transient');
+        }
+      }
+      requestAnimationFrame(micLoop);
+    }
+
+    // Mic UI buttons
+    els.enableMic && els.enableMic.addEventListener('click', function(){ initMicIfNeeded(); });
+    els.micClear && els.micClear.addEventListener('click', function(){ els.micLog.textContent=''; els.micLast.textContent='—'; micDetections=[]; });
+    els.micExport && els.micExport.addEventListener('click', function(){ var lines=['timestamp,beep_type,ref_mode,delta_s']; micDetections.forEach(function(d){ lines.push([new Date().toISOString(), d.type, d.ref||'', d.delta.toFixed(3)].join(',')); }); var blob=new Blob([lines.join('\n')],{type:'text/csv'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='mic_detections.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); });
 
     // ===== Self tests =====
     function runTests(){
-      var results = [];
-      var fails = 0;
+      var results = []; var fails = 0;
       function assert(name, cond){ results.push((cond? 'PASS':'FAIL')+' — '+name); if(!cond) fails++; }
       function shotTimes(tl){ return tl.events.filter(function(e){return e.type==='shot';}).map(function(e){return e.t;}); }
-
-      // No reload
       var tl = buildTimeline({shots:3, split:1.0, first:0.5, reloads:0, reloadTime:1.5, randomStart:false, randMin:0.0, randMax:0.0});
       var shots = shotTimes(tl);
       assert('draw at 0.00', Math.abs(tl.events.find(function(e){return e.type==='draw';}).t - 0) < 1e-9);
       assert('first shot at 0.50', Math.abs(shots[0] - 0.5) < 1e-9);
       assert('second shot at 1.50', Math.abs(shots[1] - 1.5) < 1e-9);
       assert('third shot at 2.50', Math.abs(shots[2] - 2.5) < 1e-9);
-
-      // One reload: 2 strings of 3 shots
       tl = buildTimeline({shots:3, split:1.0, first:0.5, reloads:1, reloadTime:1.5, randomStart:false, randMin:0.0, randMax:0.0});
       shots = shotTimes(tl);
       assert('6 shots total', shots.length === 6);
       var gap = shots[3] - shots[2];
       assert('Gap across reload equals reloadTime (1.5s)', Math.abs(gap - 1.5) < 1e-9);
-
-      // ReloadTime 1.3 check
       tl = buildTimeline({shots:3, split:1.0, first:0.5, reloads:1, reloadTime:1.3, randomStart:false, randMin:0.0, randMax:0.0});
-      shots = shotTimes(tl);
-      gap = shots[3] - shots[2];
+      shots = shotTimes(tl); gap = shots[3] - shots[2];
       assert('Gap across reload equals reloadTime (1.3s)', Math.abs(gap - 1.3) < 1e-9);
-
       if(els.tests){ els.tests.textContent = results.join('\n') + '\n\n' + (fails? 'FAIL' : 'PASS'); }
       console.log(results.join('\n'), '\n', fails? 'FAIL':'PASS');
     }
